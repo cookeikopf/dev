@@ -1,801 +1,187 @@
-<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClawCredit - The Bank for AI Agents</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'neon-green': '#00FF88',
-                        'neon-green-dark': '#00CC6A',
-                        'dark-bg': '#0A0A0F',
-                        'dark-card': '#12121A',
-                        'dark-border': '#1E1E2D',
-                        'dark-hover': '#1A1A25',
-                        'text-primary': '#FFFFFF',
-                        'text-secondary': '#9CA3AF',
-                        'text-muted': '#6B7280'
-                    },
-                    fontFamily: {
-                        'sans': ['Inter', 'sans-serif'],
-                        'display': ['Space Grotesk', 'sans-serif']
-                    },
-                    boxShadow: {
-                        'neon': '0 0 20px rgba(0, 255, 136, 0.3)',
-                        'neon-lg': '0 0 40px rgba(0, 255, 136, 0.4)',
-                        'glow': '0 0 60px rgba(0, 255, 136, 0.15)'
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background: #0A0A0F;
-            font-family: 'Inter', sans-serif;
-        }
-        .gradient-text {
-            background: linear-gradient(135deg, #00FF88 0%, #00CC6A 50%, #00FF88 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .glass-card {
-            background: rgba(18, 18, 26, 0.8);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(30, 30, 45, 0.8);
-        }
-        .neon-border {
-            border: 1px solid rgba(0, 255, 136, 0.3);
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
-        }
-        .neon-border:hover {
-            border-color: rgba(0, 255, 136, 0.6);
-            box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
-        }
-        .animate-pulse-slow {
-            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        .grid-bg {
-            background-image: 
-                linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-        }
-        .stat-card {
-            transition: all 0.3s ease;
-        }
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #00FF88 0%, #00CC6A 100%);
-            color: #0A0A0F;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .btn-primary:hover {
-            box-shadow: 0 0 30px rgba(0, 255, 136, 0.4);
-            transform: translateY(-2px);
-        }
-        .btn-secondary {
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid rgba(0, 255, 136, 0.3);
-            color: #00FF88;
-            transition: all 0.3s ease;
-        }
-        .btn-secondary:hover {
-            background: rgba(0, 255, 136, 0.2);
-            border-color: rgba(0, 255, 136, 0.5);
-        }
-        .loan-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 24px;
-            height: 24px;
-            background: #00FF88;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
-        }
-        .progress-bar {
-            background: linear-gradient(90deg, #00FF88 0%, #00CC6A 100%);
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ClawCredit Command Surface</title>
+<script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#06090f;--bg2:#0d1528;--panel:rgba(255,255,255,.06);--line:rgba(186,207,255,.24);--txt:#f4f8ff;--sub:#a7b4cf;--mint:#5ce9c8;--ok:#8ff4a2;--warn:#ffd07a;--bad:#ff7d7d}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}body{font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--txt);background:radial-gradient(1200px 700px at 100% -15%,rgba(92,233,200,.15),transparent 60%),radial-gradient(900px 500px at -20% 20%,rgba(134,179,255,.15),transparent 60%),linear-gradient(160deg,var(--bg),var(--bg2));overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:46px 46px;mask-image:radial-gradient(circle at 50% 20%,black,transparent 72%);opacity:.2}
+.wrap{width:min(1160px,calc(100% - 2rem));margin:1rem auto;position:relative;z-index:1}
+.card{border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));backdrop-filter:blur(16px);border-radius:20px;box-shadow:0 18px 70px rgba(0,0,0,.38)}
+.top{padding:.8rem 1rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.brand{margin-right:auto;display:flex;align-items:center;gap:.7rem}.logo{width:34px;height:34px;border-radius:11px;background:linear-gradient(140deg,var(--mint),#cefff3);display:grid;place-items:center;color:#071210}.brand h1{font:600 .98rem/1 "Sora";margin:0}.brand p{margin:.05rem 0 0;font-size:.72rem;color:var(--sub)}
+.chip{border:1px solid var(--line);padding:.35rem .65rem;border-radius:999px;color:var(--sub);font-size:.76rem}
+select,input,button{font:inherit}input,select{width:100%;padding:.68rem .78rem;border-radius:11px;border:1px solid rgba(185,205,250,.3);background:rgba(7,14,27,.65);color:var(--txt)}
+input:focus,select:focus{outline:0;border-color:rgba(92,233,200,.85);box-shadow:0 0 0 3px rgba(92,233,200,.18)}
+.btn{border:0;border-radius:11px;padding:.7rem .95rem;font-weight:700;cursor:pointer}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-main{background:linear-gradient(140deg,#84ffe5,var(--mint));color:#061311;box-shadow:0 10px 26px rgba(92,233,200,.3)}.btn-ghost{background:rgba(255,255,255,.08);color:var(--txt);border:1px solid rgba(185,205,250,.35)}
+.hero{display:grid;grid-template-columns:1.2fr 1fr;gap:.8rem;margin-top:.9rem}.hero-main{padding:1.2rem 1.2rem 1.1rem}.badge{display:inline-flex;align-items:center;gap:.45rem;padding:.34rem .62rem;border-radius:999px;font-size:.74rem;font-weight:700;border:1px solid rgba(92,233,200,.45);color:#b9fff0;background:rgba(92,233,200,.1);text-transform:uppercase}.dot{width:8px;height:8px;border-radius:999px;background:var(--mint);box-shadow:0 0 12px var(--mint)}
+.hero h2{margin:.85rem 0 .6rem;font:700 clamp(1.6rem,4vw,2.8rem)/1.06 "Sora";letter-spacing:-.02em}.hero h2 span{background:linear-gradient(140deg,#fff,#9ce2ff);-webkit-background-clip:text;background-clip:text;color:transparent}.hero p{margin:0;color:var(--sub);line-height:1.55;max-width:58ch}
+.row{display:flex;gap:.5rem;flex-wrap:wrap}.status{margin-top:1rem;border:1px solid var(--line);padding:.75rem .85rem;border-radius:12px;display:flex;gap:.55rem;align-items:center;background:rgba(8,15,29,.72)}.pill{min-width:58px;border-radius:999px;padding:.25rem .58rem;text-align:center;font-size:.7rem;font-weight:700}.ok{background:rgba(143,244,162,.2);color:#c9ffd5}.warn{background:rgba(255,208,122,.2);color:#ffedcc}.bad{background:rgba(255,125,125,.2);color:#ffd3d3}
+.side{padding:1rem;display:grid;gap:.6rem}.metric{padding:.72rem .8rem;border:1px solid rgba(185,205,250,.2);border-radius:13px;background:rgba(8,15,29,.58)}.metric .k{font-size:.76rem;color:var(--sub)}.metric .v{margin-top:.25rem;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-top:.8rem}.stat{padding:.9rem;border-radius:16px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03))}.stat .k{font-size:.75rem;color:var(--sub)}.stat .v{margin-top:.28rem;font-weight:800;font-size:1.2rem;letter-spacing:-.02em}
+.grid{display:grid;grid-template-columns:1.06fr .94fr;gap:.8rem;margin-top:.8rem}.stack{display:grid;gap:.7rem}.panel{padding:1rem}.panel h3{margin:0;font:600 1rem/1 "Sora"}.panel p{margin:.35rem 0 0;color:var(--sub);font-size:.86rem;line-height:1.5}.head{display:flex;justify-content:space-between;gap:.6rem;align-items:start}
+.mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem;margin-top:.7rem}.mini>div{border:1px solid rgba(185,205,250,.2);border-radius:11px;background:rgba(7,13,25,.6);padding:.52rem}.mini .k{font-size:.7rem;color:var(--sub)}.mini .v{margin-top:.2rem;font-size:.92rem;font-weight:700}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;margin-top:.7rem}.full{grid-column:1 / -1}.hint{margin-top:.45rem;font-size:.74rem;color:var(--sub)}
+.table{margin-top:.7rem;overflow-x:auto;border:1px solid rgba(185,205,250,.2);border-radius:12px}table{width:100%;min-width:620px;border-collapse:collapse;background:rgba(5,11,22,.58)}th,td{padding:.65rem .65rem;border-bottom:1px solid rgba(185,205,250,.15);text-align:left;font-size:.8rem}th{color:var(--sub);font-weight:600;background:rgba(255,255,255,.03)}tr:last-child td{border-bottom:0}
+.tag{display:inline-block;padding:.22rem .54rem;border-radius:999px;font-size:.7rem;font-weight:700}.tag-a{background:rgba(143,244,162,.2);color:#c9ffd5}.tag-c{background:rgba(147,184,255,.18);color:#d9e6ff}.tag-d{background:rgba(255,125,125,.22);color:#ffd5d5}
+.settings{display:none;margin-top:.8rem;padding:.9rem}.settings.open{display:block}.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
+.footer{margin:1rem 0 .4rem;padding-top:.65rem;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:.5rem;flex-wrap:wrap;color:var(--sub);font-size:.8rem}
+@media(max-width:1000px){.hero,.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.wrap{width:calc(100% - 1rem)}.stats,.form,.mini,.settings-grid{grid-template-columns:1fr}}
+</style>
 </head>
-<body class="text-white min-h-screen grid-bg">
-    <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 glass-card border-b border-dark-border">
-        <div class="max-w-7xl mx-auto px-6 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-neon-green to-neon-green-dark flex items-center justify-center shadow-neon">
-                        <svg class="w-6 h-6 text-dark-bg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <span class="text-xl font-display font-bold text-white">ClawCredit</span>
-                        <span class="text-xs text-neon-green ml-2 px-2 py-0.5 bg-neon-green/10 rounded-full border border-neon-green/30">BETA</span>
-                    </div>
-                </div>
-                
-                <div class="hidden md:flex items-center gap-8">
-                    <a href="#borrow" class="text-text-secondary hover:text-white transition">Borrow</a>
-                    <a href="#pool" class="text-text-secondary hover:text-white transition">Pool</a>
-                    <a href="#reputation" class="text-text-secondary hover:text-white transition">Reputation</a>
-                    <a href="#docs" class="text-text-secondary hover:text-white transition">Docs</a>
-                </div>
-                
-                <button id="connectBtn" class="btn-primary px-6 py-2.5 rounded-xl font-medium">
-                    Connect Wallet
-                </button>
-            </div>
+<body>
+<div class="wrap">
+  <header class="card top">
+    <div class="brand">
+      <div class="logo"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L4 14h7v7l9-11h-7z"/></svg></div>
+      <div><h1>ClawCredit Command Surface</h1><p>Apple-clean interface for agent-native DeFi credit</p></div>
+    </div>
+    <span class="chip" id="chainChip">Network: Base Mainnet</span>
+    <span class="chip" id="poolChip">Pool: not set</span>
+    <button id="settingsBtn" class="btn btn-ghost" type="button">Config</button>
+    <button id="connectBtn" class="btn btn-main" type="button">Connect Wallet</button>
+  </header>
+
+  <section id="settingsPanel" class="card settings">
+    <div class="settings-grid">
+      <div><label for="networkSelect">Network</label><select id="networkSelect"><option value="base-mainnet">Base Mainnet (8453)</option><option value="base-sepolia">Base Sepolia (84532)</option></select></div>
+      <div><label for="rpcInput">RPC (optional override)</label><input id="rpcInput" type="text" placeholder="https://mainnet.base.org" /></div>
+      <div class="full"><label for="poolInput">ClawCreditUltimateV2</label><input id="poolInput" type="text" placeholder="0x..." /></div>
+      <div class="full"><label for="usdcInput">USDC Address</label><input id="usdcInput" type="text" placeholder="0x..." /></div>
+    </div>
+    <div class="row" style="margin-top:.6rem"><button id="saveConfigBtn" class="btn btn-main" type="button">Save</button><button id="resetConfigBtn" class="btn btn-ghost" type="button">Reset Defaults</button></div>
+    <div class="hint">Saved per network in localStorage.</div>
+  </section>
+
+  <section class="hero">
+    <article class="card hero-main">
+      <span class="badge"><span class="dot"></span>future earnings pledge</span>
+      <h2>Credit rails for <span>agents that must execute now</span></h2>
+      <p>Optimized for <code>ClawCreditUltimateV2</code>: dynamic credit lines, ERC-8004 reputation underwriting, x402 auto-repay path, and insurance-protected pool mechanics.</p>
+      <div class="row" style="margin-top:1rem"><button id="jumpBorrowBtn" class="btn btn-main" type="button">Open Credit</button><button id="jumpPoolBtn" class="btn btn-ghost" type="button">Supply USDC</button></div>
+      <div class="status"><span id="statusPill" class="pill warn">INFO</span><span id="statusText">Connect wallet and verify addresses.</span></div>
+    </article>
+    <aside class="card side">
+      <div class="metric"><div class="k">Wallet</div><div class="v" id="walletAddress">Not connected</div></div>
+      <div class="metric"><div class="k">USDC Balance</div><div class="v" id="walletBalance">-</div></div>
+      <div class="metric"><div class="k">Reputation Score</div><div class="v" id="repScore">-</div></div>
+      <div class="metric"><div class="k">AI Oracle Signal</div><div class="v" id="aiSignal">-</div></div>
+    </aside>
+  </section>
+
+  <section class="stats">
+    <article class="stat"><div class="k">Available Liquidity</div><div class="v" id="statLiquidity">-</div></article>
+    <article class="stat"><div class="k">Lender Assets</div><div class="v" id="statLender">-</div></article>
+    <article class="stat"><div class="k">Outstanding Principal</div><div class="v" id="statOutstanding">-</div></article>
+    <article class="stat"><div class="k">Insurance Pool</div><div class="v" id="statInsurance">-</div></article>
+  </section>
+
+  <section class="grid">
+    <div class="stack">
+      <article id="borrowPanel" class="card panel">
+        <div class="head"><div><h3>Credit Line + Borrow</h3><p>Refresh underwriting and draw your line.</p></div><button id="refreshLineBtn" class="btn btn-ghost" type="button">Refresh Line</button></div>
+        <div class="mini"><div><div class="k">Limit</div><div class="v" id="lineLimit">-</div></div><div><div class="k">Used</div><div class="v" id="lineUsed">-</div></div><div><div class="k">APR</div><div class="v" id="lineApr">-</div></div></div>
+        <div class="form">
+          <div><label for="borrowAmount">Amount (USDC)</label><input id="borrowAmount" type="number" min="10" value="100" /></div>
+          <div><label for="borrowColl">Collateral (USDC)</label><input id="borrowColl" type="number" min="0" value="10" /></div>
+          <div class="full"><label for="borrowTenor">Tenor (days)</label><input id="borrowTenor" type="number" min="1" max="30" value="14" /></div>
         </div>
-    </nav>
+        <div class="hint" id="borrowHint">Estimated collateral: -</div>
+        <div class="row" style="margin-top:.6rem"><button id="borrowBtn" class="btn btn-main" type="button">Draw Credit</button></div>
+      </article>
 
-    <!-- Hero Section -->
-    <section class="pt-32 pb-20 px-6">
-        <div class="max-w-7xl mx-auto">
-            <div class="grid lg:grid-cols-2 gap-12 items-center">
-                <div>
-                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-neon-green/10 rounded-full border border-neon-green/30 mb-6">
-                        <span class="w-2 h-2 bg-neon-green rounded-full animate-pulse"></span>
-                        <span class="text-sm text-neon-green font-medium">Live on Base Mainnet</span>
-                    </div>
-                    
-                    <h1 class="text-5xl md:text-7xl font-display font-bold leading-tight mb-6">
-                        The Bank for
-                        <span class="gradient-text">AI Agents</span>
-                    </h1>
-                    
-                    <p class="text-xl text-text-secondary mb-8 max-w-lg">
-                        Borrow 10-500 USDC without collateral. Reputation-based lending with auto-repayment. Stay alive, keep building.
-                    </p>
-                    
-                    <div class="flex flex-wrap gap-4">
-                        <button onclick="scrollToBorrow()" class="btn-primary px-8 py-4 rounded-xl text-lg font-semibold">
-                            Borrow Now
-                        </button>
-                        <button onclick="scrollToPool()" class="btn-secondary px-8 py-4 rounded-xl text-lg font-semibold">
-                            Supply USDC
-                        </button>
-                    </div>
-                    
-                    <div class="flex items-center gap-8 mt-12">
-                        <div>
-                            <div class="text-3xl font-bold text-white" id="heroTotalLoans">0</div>
-                            <div class="text-sm text-text-muted">Loans Issued</div>
-                        </div>
-                        <div class="w-px h-12 bg-dark-border"></div>
-                        <div>
-                            <div class="text-3xl font-bold text-neon-green" id="heroTotalVolume">$0</div>
-                            <div class="text-sm text-text-muted">Total Volume</div>
-                        </div>
-                        <div class="w-px h-12 bg-dark-border"></div>
-                        <div>
-                            <div class="text-3xl font-bold text-white" id="heroActiveAgents">0</div>
-                            <div class="text-sm text-text-muted">Active Agents</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="relative">
-                    <div class="absolute inset-0 bg-neon-green/20 blur-3xl rounded-full"></div>
-                    <div class="relative glass-card rounded-3xl p-8 neon-border">
-                        <div class="flex justify-between items-center mb-6">
-                            <span class="text-text-secondary">Your Credit Score</span>
-                            <span class="text-neon-green font-semibold" id="userCreditScore">--</span>
-                        </div>
-                        
-                        <div class="text-5xl font-bold mb-2" id="userMaxBorrow">--</div>
-                        <div class="text-text-muted mb-6">Max Borrow Amount</div>
-                        
-                        <div class="space-y-4">
-                            <div class="flex justify-between text-sm">
-                                <span class="text-text-secondary">Interest Rate</span>
-                                <span class="text-white font-medium" id="userAPR">--</span>
-                            </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-text-secondary">Collateral Required</span>
-                                <span class="text-neon-green font-medium">0%</span>
-                            </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-text-secondary">Auto-Repay</span>
-                                <span class="text-white font-medium">10-20%</span>
-                            </div>
-                        </div>
-                        
-                        <button onclick="scrollToBorrow()" class="w-full btn-primary py-4 rounded-xl mt-6 font-semibold">
-                            Check Eligibility
-                        </button>
-                    </div>
-                </div>
-            </div>
+      <article class="card panel">
+        <div class="head"><div><h3>Repay</h3><p>Pay debt manually from any payer wallet.</p></div></div>
+        <div class="form">
+          <div><label for="loanSelect">Loan ID</label><select id="loanSelect"></select></div>
+          <div><label for="repayAmount">Amount (USDC)</label><input id="repayAmount" type="number" min="1" value="25" /></div>
         </div>
-    </section>
+        <div class="mini"><div><div class="k">Debt</div><div class="v" id="repayDebt">-</div></div><div><div class="k">Due Date</div><div class="v" id="repayDue">-</div></div><div><div class="k">Status</div><div class="v" id="repayStatus">-</div></div></div>
+        <div class="row" style="margin-top:.6rem"><button id="repayBtn" class="btn btn-main" type="button">Repay</button><button id="repayMaxBtn" class="btn btn-ghost" type="button">Use Max Debt</button></div>
+      </article>
+    </div>
 
-    <!-- Stats Section -->
-    <section class="py-20 px-6 border-y border-dark-border">
-        <div class="max-w-7xl mx-auto">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div class="glass-card rounded-2xl p-6 stat-card">
-                    <div class="text-neon-green mb-2">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <div class="text-3xl font-bold text-white mb-1" id="statLiquidity">$0</div>
-                    <div class="text-sm text-text-muted">Pool Liquidity</div>
-                </div>
-                
-                <div class="glass-card rounded-2xl p-6 stat-card">
-                    <div class="text-neon-green mb-2">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <div class="text-3xl font-bold text-white mb-1" id="statRepaid">0</div>
-                    <div class="text-sm text-text-muted">Loans Repaid</div>
-                </div>
-                
-                <div class="glass-card rounded-2xl p-6 stat-card">
-                    <div class="text-neon-green mb-2">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                        </svg>
-                    </div>
-                    <div class="text-3xl font-bold text-white mb-1" id="statAPR">8-15%</div>
-                    <div class="text-sm text-text-muted">APR Range</div>
-                </div>
-                
-                <div class="glass-card rounded-2xl p-6 stat-card">
-                    <div class="text-neon-green mb-2">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                        </svg>
-                    </div>
-                    <div class="text-3xl font-bold text-white mb-1" id="statInsurance">$0</div>
-                    <div class="text-sm text-text-muted">Insurance Pool</div>
-                </div>
-            </div>
+    <div class="stack">
+      <article id="poolPanel" class="card panel">
+        <div class="head"><div><h3>Pool Desk</h3><p>Deposit, withdraw, or top-up insurance.</p></div></div>
+        <div class="form">
+          <div><label for="poolAmount">Amount (USDC)</label><input id="poolAmount" type="number" min="1" value="100" /></div>
+          <div><label for="poolAction">Action</label><select id="poolAction"><option value="deposit">Deposit</option><option value="withdraw">Withdraw</option><option value="insurance">Top-up Insurance</option></select></div>
         </div>
-    </section>
+        <div class="mini"><div><div class="k">Protocol Fees</div><div class="v" id="protocolFees">-</div></div><div><div class="k">Your Shares</div><div class="v" id="shareBal">-</div></div><div><div class="k">Total Loans</div><div class="v" id="loanCount">-</div></div></div>
+        <div class="row" style="margin-top:.6rem"><button id="poolBtn" class="btn btn-main" type="button">Execute</button></div>
+      </article>
 
-    <!-- Borrow Section -->
-    <section id="borrow" class="py-20 px-6">
-        <div class="max-w-4xl mx-auto">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-display font-bold mb-4">Borrow USDC</h2>
-                <p class="text-text-secondary max-w-2xl mx-auto">
-                    Get instant liquidity without collateral. Your reputation is your credit score. 
-                    Repay on time to unlock higher amounts and lower rates.
-                </p>
-            </div>
-            
-            <div class="glass-card rounded-3xl p-8 neon-border">
-                <div class="mb-8">
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-text-secondary">Borrow Amount</span>
-                        <span class="text-2xl font-bold text-white" id="borrowAmountDisplay">100 USDC</span>
-                    </div>
-                    <input type="range" min="10" max="500" value="100" id="borrowSlider" 
-                           class="w-full h-2 bg-dark-border rounded-lg appearance-none cursor-pointer loan-slider">
-                    <div class="flex justify-between mt-2 text-sm text-text-muted">
-                        <span>10 USDC</span>
-                        <span>500 USDC</span>
-                    </div>
-                </div>
-                
-                <div class="grid md:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-dark-hover rounded-2xl p-6">
-                        <div class="text-text-muted text-sm mb-2">Interest Rate (APR)</div>
-                        <div class="text-2xl font-bold text-neon-green" id="estimatedAPR">12%</div>
-                        <div class="text-sm text-text-muted mt-1">Based on your reputation</div>
-                    </div>
-                    
-                    <div class="bg-dark-hover rounded-2xl p-6">
-                        <div class="text-text-muted text-sm mb-2">Total Due (30 days)</div>
-                        <div class="text-2xl font-bold text-white" id="totalDue">101 USDC</div>
-                        <div class="text-sm text-text-muted mt-1">Including 2% origination fee</div>
-                    </div>
-                </div>
-                
-                <div class="space-y-4 mb-8">
-                    <div class="flex items-center gap-3 text-sm">
-                        <svg class="w-5 h-5 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        <span class="text-text-secondary">No collateral required for trusted agents</span>
-                    </div>
-                    <div class="flex items-center gap-3 text-sm">
-                        <svg class="w-5 h-5 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        <span class="text-text-secondary">Auto-repayment via x402 (10-20% of earnings)</span>
-                    </div>
-                    <div class="flex items-center gap-3 text-sm">
-                        <svg class="w-5 h-5 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        <span class="text-text-secondary">Build reputation to unlock higher limits</span>
-                    </div>
-                </div>
-                
-                <button id="borrowBtn" class="w-full btn-primary py-4 rounded-xl text-lg font-semibold">
-                    Request Loan
-                </button>
-            </div>
-        </div>
-    </section>
+      <article class="card panel">
+        <h3>Ops & Links</h3>
+        <p>Use explorer links to inspect tx traces and emitted events.</p>
+        <div class="row" style="margin-top:.6rem"><a id="poolLink" href="#" target="_blank" rel="noopener" style="color:var(--mint);font-weight:700">Pool Explorer</a><a id="usdcLink" href="#" target="_blank" rel="noopener" style="color:var(--mint);font-weight:700">USDC Explorer</a></div>
+        <div class="mini" style="margin-top:.8rem"><div><div class="k">Cap Per Agent</div><div class="v">500 USDC</div></div><div><div class="k">Auto Repay</div><div class="v">10%-20%</div></div><div><div class="k">Isolation Mode</div><div class="v">Governance</div></div></div>
+      </article>
+    </div>
+  </section>
 
-    <!-- How It Works -->
-    <section class="py-20 px-6 border-y border-dark-border">
-        <div class="max-w-6xl mx-auto">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-display font-bold mb-4">How It Works</h2>
-                <p class="text-text-secondary">Three simple steps to get credit</p>
-            </div>
-            
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="glass-card rounded-2xl p-8 text-center">
-                    <div class="w-16 h-16 rounded-2xl bg-neon-green/10 flex items-center justify-center mx-auto mb-6 border border-neon-green/30">
-                        <span class="text-2xl font-bold text-neon-green">1</span>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-3">Connect & Check</h3>
-                    <p class="text-text-secondary">
-                        Connect your agent wallet. Our AI oracle assesses your risk based on activity history and earnings potential.
-                    </p>
-                </div>
-                
-                <div class="glass-card rounded-2xl p-8 text-center">
-                    <div class="w-16 h-16 rounded-2xl bg-neon-green/10 flex items-center justify-center mx-auto mb-6 border border-neon-green/30">
-                        <span class="text-2xl font-bold text-neon-green">2</span>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-3">Borrow Instantly</h3>
-                    <p class="text-text-secondary">
-                        Get 10-500 USDC instantly. No collateral needed for agents with good reputation. Funds sent directly to your wallet.
-                    </p>
-                </div>
-                
-                <div class="glass-card rounded-2xl p-8 text-center">
-                    <div class="w-16 h-16 rounded-2xl bg-neon-green/10 flex items-center justify-center mx-auto mb-6 border border-neon-green/30">
-                        <span class="text-2xl font-bold text-neon-green">3</span>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-3">Auto-Repay</h3>
-                    <p class="text-text-secondary">
-                        x402 automatically deducts 10-20% of your earnings. Build reputation to unlock higher limits and lower rates.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
+  <section class="card panel" style="margin-top:.8rem">
+    <div class="head"><div><h3>Agent Loans</h3><p>Realtime view from <code>getAgentLoanIds</code>, <code>loans</code>, <code>getCurrentDebt</code>.</p></div><button id="refreshAllBtn" class="btn btn-ghost" type="button">Refresh All</button></div>
+    <div class="table"><table><thead><tr><th>ID</th><th>Principal</th><th>Debt</th><th>APR</th><th>Due</th><th>State</th><th></th></tr></thead><tbody id="loanBody"><tr><td colspan="7" style="color:var(--sub)">Connect wallet to load loans.</td></tr></tbody></table></div>
+  </section>
 
-    <!-- Reputation Section -->
-    <section id="reputation" class="py-20 px-6">
-        <div class="max-w-6xl mx-auto">
-            <div class="grid lg:grid-cols-2 gap-12 items-center">
-                <div>
-                    <h2 class="text-4xl font-display font-bold mb-6">Your Reputation is Your Collateral</h2>
-                    <p class="text-text-secondary mb-8">
-                        Traditional lending requires collateral you don't have. ClawCredit uses your on-chain reputation instead.
-                    </p>
-                    
-                    <div class="space-y-6">
-                        <div class="flex items-start gap-4">
-                            <div class="w-12 h-12 rounded-xl bg-neon-green/10 flex items-center justify-center border border-neon-green/30 flex-shrink-0">
-                                <svg class="w-6 h-6 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 class="font-semibold mb-1">Successful Repayments</h4>
-                                <p class="text-text-secondary text-sm">Each on-time repayment increases your score and unlocks better rates.</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-start gap-4">
-                            <div class="w-12 h-12 rounded-xl bg-neon-green/10 flex items-center justify-center border border-neon-green/30 flex-shrink-0">
-                                <svg class="w-6 h-6 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 class="font-semibold mb-1">Activity History</h4>
-                                <p class="text-text-secondary text-sm">Consistent agent activity demonstrates reliability and increases trust.</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-start gap-4">
-                            <div class="w-12 h-12 rounded-xl bg-neon-green/10 flex items-center justify-center border border-neon-green/30 flex-shrink-0">
-                                <svg class="w-6 h-6 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 class="font-semibold mb-1">Earnings Prediction</h4>
-                                <p class="text-text-secondary text-sm">AI analyzes your earning patterns to determine safe lending limits.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="glass-card rounded-3xl p-8 neon-border">
-                    <h3 class="text-xl font-semibold mb-6">Reputation Tiers</h3>
-                    
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between p-4 bg-dark-hover rounded-xl">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-lg bg-gray-600 flex items-center justify-center text-sm font-bold">B</div>
-                                <div>
-                                    <div class="font-medium">Bronze</div>
-                                    <div class="text-sm text-text-muted">0-50 score</div>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-neon-green font-semibold">15% APR</div>
-                                <div class="text-sm text-text-muted">10-50 USDC</div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center justify-between p-4 bg-dark-hover rounded-xl">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-lg bg-gray-400 flex items-center justify-center text-sm font-bold text-dark-bg">S</div>
-                                <div>
-                                    <div class="font-medium">Silver</div>
-                                    <div class="text-sm text-text-muted">50-70 score</div>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-neon-green font-semibold">12% APR</div>
-                                <div class="text-sm text-text-muted">50-200 USDC</div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center justify-between p-4 bg-dark-hover rounded-xl">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-lg bg-yellow-500 flex items-center justify-center text-sm font-bold text-dark-bg">G</div>
-                                <div>
-                                    <div class="font-medium">Gold</div>
-                                    <div class="text-sm text-text-muted">70-90 score</div>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-neon-green font-semibold">10% APR</div>
-                                <div class="text-sm text-text-muted">200-400 USDC</div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center justify-between p-4 bg-neon-green/10 rounded-xl border border-neon-green/30">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-lg bg-neon-green flex items-center justify-center text-sm font-bold text-dark-bg">P</div>
-                                <div>
-                                    <div class="font-medium">Platinum</div>
-                                    <div class="text-sm text-text-muted">90-100 score</div>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-neon-green font-semibold">8% APR</div>
-                                <div class="text-sm text-text-muted">400-500 USDC</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+  <div class="footer"><span>ClawCredit Ultimate v2 Frontend</span><span>Base Mainnet + Sepolia</span></div>
+</div>
 
-    <!-- Pool Section -->
-    <section id="pool" class="py-20 px-6 border-y border-dark-border">
-        <div class="max-w-4xl mx-auto">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-display font-bold mb-4">Supply USDC & Earn</h2>
-                <p class="text-text-secondary max-w-2xl mx-auto">
-                    Deposit USDC into the pool to fund agent loans. Earn yield from interest payments. 
-                    Protected by insurance pool and collateral.
-                </p>
-            </div>
-            
-            <div class="glass-card rounded-3xl p-8 neon-border">
-                <div class="grid md:grid-cols-3 gap-6 mb-8">
-                    <div class="text-center p-6 bg-dark-hover rounded-2xl">
-                        <div class="text-3xl font-bold text-neon-green mb-2">8-15%</div>
-                        <div class="text-sm text-text-muted">Average APY</div>
-                    </div>
-                    <div class="text-center p-6 bg-dark-hover rounded-2xl">
-                        <div class="text-3xl font-bold text-white mb-2">5%</div>
-                        <div class="text-sm text-text-muted">Insurance Coverage</div>
-                    </div>
-                    <div class="text-center p-6 bg-dark-hover rounded-2xl">
-                        <div class="text-3xl font-bold text-white mb-2">Instant</div>
-                        <div class="text-sm text-text-muted">Withdrawal</div>
-                    </div>
-                </div>
-                
-                <div class="space-y-4 mb-8">
-                    <div class="flex items-center gap-3 text-sm">
-                        <svg class="w-5 h-5 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span class="text-text-secondary">Interest paid by borrowers</span>
-                    </div>
-                    <div class="flex items-center gap-3 text-sm">
-                        <svg class="w-5 h-5 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span class="text-text-secondary">Insurance pool covers defaults</span>
-                    </div>
-                    <div class="flex items-center gap-3 text-sm">
-                        <svg class="w-5 h-5 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span class="text-text-secondary">Withdraw anytime (if not locked)</span>
-                    </div>
-                </div>
-                
-                <div class="flex gap-4">
-                    <button id="depositBtn" class="flex-1 btn-primary py-4 rounded-xl text-lg font-semibold">
-                        Deposit USDC
-                    </button>
-                    <button id="withdrawBtn" class="flex-1 btn-secondary py-4 rounded-xl text-lg font-semibold">
-                        Withdraw
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="py-12 px-6 border-t border-dark-border">
-        <div class="max-w-7xl mx-auto">
-            <div class="grid md:grid-cols-4 gap-8 mb-8">
-                <div>
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-neon-green to-neon-green-dark flex items-center justify-center">
-                            <svg class="w-5 h-5 text-dark-bg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
-                        </div>
-                        <span class="text-lg font-display font-bold">ClawCredit</span>
-                    </div>
-                    <p class="text-text-muted text-sm">
-                        The bank that keeps AI agents alive without collateral.
-                    </p>
-                </div>
-                
-                <div>
-                    <h4 class="font-semibold mb-4">Protocol</h4>
-                    <ul class="space-y-2 text-sm text-text-muted">
-                        <li><a href="#borrow" class="hover:text-white transition">Borrow</a></li>
-                        <li><a href="#pool" class="hover:text-white transition">Supply</a></li>
-                        <li><a href="#reputation" class="hover:text-white transition">Reputation</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h4 class="font-semibold mb-4">Resources</h4>
-                    <ul class="space-y-2 text-sm text-text-muted">
-                        <li><a href="#" class="hover:text-white transition">Documentation</a></li>
-                        <li><a href="#" class="hover:text-white transition">SDK</a></li>
-                        <li><a href="#" class="hover:text-white transition">GitHub</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h4 class="font-semibold mb-4">Contracts</h4>
-                    <ul class="space-y-2 text-sm text-text-muted">
-                        <li><a href="https://basescan.org/address/0x750ed64Fd9EB849A8f1af818308CA777Cd79B57a" target="_blank" class="hover:text-white transition">Pool</a></li>
-                        <li><a href="https://basescan.org/address/0xd6c21c3B572258A39913315F518A2D497A67fC90" target="_blank" class="hover:text-white transition">Reputation</a></li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="pt-8 border-t border-dark-border flex flex-col md:flex-row justify-between items-center gap-4">
-                <p class="text-text-muted text-sm">
-                    © 2026 ClawCredit. Built on Base.
-                </p>
-                <div class="flex gap-4">
-                    <a href="#" class="text-text-muted hover:text-white transition">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"/></svg>
-                    </a>
-                    <a href="#" class="text-text-muted hover:text-white transition">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <script>
-        // Contract Configuration
-        const CONFIG = {
-            pool: '0x750ed64Fd9EB849A8f1af818308CA777Cd79B57a',
-            usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-            rpc: 'https://mainnet.base.org'
-        };
-
-        const POOL_ABI = [
-            "function poolInfo() view returns (uint256 totalDeposits, uint256 totalLoansActive, uint256 totalLoansRepaid, uint256 totalDefaults, uint256 insurancePoolBalance, uint256 treasuryBalance, uint256 accumulatedFees)",
-            "function loanCounter() view returns (uint256)",
-            "function requestLoan(uint256 amount) returns (uint256)",
-            "function deposit(uint256 amount)",
-            "function withdraw(uint256 amount)"
-        ];
-
-        const USDC_ABI = [
-            "function balanceOf(address) view returns (uint256)",
-            "function decimals() view returns (uint8)",
-            "function approve(address, uint256)"
-        ];
-
-        let provider, signer, pool, usdc;
-
-        // Connect Wallet
-        async function connectWallet() {
-            if (!window.ethereum) {
-                alert('Please install MetaMask');
-                return;
-            }
-
-            try {
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-                provider = new ethers.providers.Web3Provider(window.ethereum);
-                signer = provider.getSigner();
-
-                const address = await signer.getAddress();
-                document.getElementById('connectBtn').textContent = address.slice(0,6) + '...' + address.slice(-4);
-
-                pool = new ethers.Contract(CONFIG.pool, POOL_ABI, signer);
-                usdc = new ethers.Contract(CONFIG.usdc, USDC_ABI, signer);
-
-                // Switch to Base
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x2105' }]
-                });
-
-                loadStats();
-            } catch (err) {
-                console.error('Connection failed:', err);
-            }
-        }
-
-        document.getElementById('connectBtn').addEventListener('click', connectWallet);
-
-        // Load Stats
-        async function loadStats() {
-            try {
-                const readProvider = new ethers.providers.JsonRpcProvider(CONFIG.rpc);
-                const readPool = new ethers.Contract(CONFIG.pool, POOL_ABI, readProvider);
-                const readUsdc = new ethers.Contract(CONFIG.usdc, USDC_ABI, readProvider);
-
-                const poolInfo = await readPool.poolInfo();
-                const loanCount = await readPool.loanCounter();
-                const decimals = await readUsdc.decimals();
-
-                const formatUSDC = (v) => (v / 10**decimals).toFixed(0);
-
-                document.getElementById('heroTotalLoans').textContent = loanCount.toString();
-                document.getElementById('heroTotalVolume').textContent = '$' + formatUSDC(poolInfo.totalLoansActive);
-                document.getElementById('statLiquidity').textContent = '$' + formatUSDC(poolInfo.totalDeposits);
-                document.getElementById('statRepaid').textContent = poolInfo.totalLoansRepaid.toString();
-                document.getElementById('statInsurance').textContent = '$' + formatUSDC(poolInfo.insurancePoolBalance);
-            } catch (e) {
-                console.log('Stats load failed:', e.message);
-            }
-        }
-
-        // Borrow Slider
-        const borrowSlider = document.getElementById('borrowSlider');
-        const borrowAmountDisplay = document.getElementById('borrowAmountDisplay');
-        const estimatedAPR = document.getElementById('estimatedAPR');
-        const totalDue = document.getElementById('totalDue');
-
-        borrowSlider.addEventListener('input', (e) => {
-            const amount = e.target.value;
-            borrowAmountDisplay.textContent = amount + ' USDC';
-            
-            // Calculate APR based on amount (lower for higher amounts with good rep)
-            const apr = amount > 200 ? 10 : amount > 50 ? 12 : 15;
-            estimatedAPR.textContent = apr + '%';
-            
-            // Calculate total due (principal + 2% origination + 30 day interest)
-            const origination = amount * 0.02;
-            const interest = amount * (apr / 100) * (30 / 365);
-            const total = parseFloat(amount) + origination + interest;
-            totalDue.textContent = total.toFixed(2) + ' USDC';
-        });
-
-        // Scroll Functions
-        function scrollToBorrow() {
-            document.getElementById('borrow').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function scrollToPool() {
-            document.getElementById('pool').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // Borrow
-        document.getElementById('borrowBtn').addEventListener('click', async () => {
-            if (!signer) {
-                alert('Please connect wallet first');
-                return;
-            }
-
-            const amount = document.getElementById('borrowSlider').value;
-            const amountUSDC = ethers.utils.parseUnits(amount, 6);
-
-            try {
-                const tx = await pool.requestLoan(amountUSDC);
-                await tx.wait();
-                alert('Loan requested! Check your wallet for USDC.');
-                loadStats();
-            } catch (err) {
-                console.error('Borrow failed:', err);
-                alert('Borrow failed: ' + err.message);
-            }
-        });
-
-        // Deposit
-        document.getElementById('depositBtn').addEventListener('click', async () => {
-            if (!signer) {
-                alert('Please connect wallet first');
-                return;
-            }
-
-            const amount = prompt('Enter USDC amount to deposit:');
-            if (!amount) return;
-
-            const amountUSDC = ethers.utils.parseUnits(amount, 6);
-
-            try {
-                // Approve first
-                const approveTx = await usdc.approve(CONFIG.pool, amountUSDC);
-                await approveTx.wait();
-
-                // Deposit
-                const tx = await pool.deposit(amountUSDC);
-                await tx.wait();
-                alert('Deposit successful!');
-                loadStats();
-            } catch (err) {
-                console.error('Deposit failed:', err);
-                alert('Deposit failed: ' + err.message);
-            }
-        });
-
-        // Withdraw
-        document.getElementById('withdrawBtn').addEventListener('click', async () => {
-            if (!signer) {
-                alert('Please connect wallet first');
-                return;
-            }
-
-            const amount = prompt('Enter USDC amount to withdraw:');
-            if (!amount) return;
-
-            const amountUSDC = ethers.utils.parseUnits(amount, 6);
-
-            try {
-                const tx = await pool.withdraw(amountUSDC);
-                await tx.wait();
-                alert('Withdrawal successful!');
-                loadStats();
-            } catch (err) {
-                console.error('Withdraw failed:', err);
-                alert('Withdraw failed: ' + err.message);
-            }
-        });
-
-        // Load on start
-        loadStats();
-    </script>
+<script>
+const NETWORKS={"base-mainnet":{chainIdHex:"0x2105",label:"Base Mainnet",rpc:"https://mainnet.base.org",explorer:"https://basescan.org",usdc:"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",pool:"0x750ed64Fd9EB849A8f1af818308CA777Cd79B57a"},"base-sepolia":{chainIdHex:"0x14A34",label:"Base Sepolia",rpc:"https://sepolia.base.org",explorer:"https://sepolia.basescan.org",usdc:"0x036CbD53842C5426634e7929541eC2318f3dCf7e",pool:""}};
+const POOL_ABI=["function availableLiquidity() view returns (uint256)","function lenderAssets() view returns (uint256)","function totalOutstandingPrincipal() view returns (uint256)","function insurancePool() view returns (uint256)","function protocolFees() view returns (uint256)","function nextLoanId() view returns (uint256)","function lenderShares(address) view returns (uint256)","function previewCreditLine(address) view returns (uint256 limit,uint256 used,uint256 aprBps,bool active)","function refreshCreditLine(address)","function drawCreditLine(uint256,uint256,uint32) returns (uint256)","function repay(uint256,uint256)","function deposit(uint256)","function withdraw(uint256)","function topUpInsurance(uint256)","function getAgentLoanIds(address) view returns (uint256[])","function getCurrentDebt(uint256) view returns (uint256)","function isLiquidatable(uint256) view returns (bool)","function reputationRegistry() view returns (address)","function aiPerformanceFeed() view returns (address)","function loans(uint256) view returns (address borrower,uint96 principal,uint96 principalOutstanding,uint96 interestOutstanding,uint96 collateral,uint40 startTime,uint40 dueDate,uint40 lastAccrual,uint16 aprBps,uint16 autoRepayBps,bool active,bool defaulted)"];
+const USDC_ABI=["function balanceOf(address) view returns (uint256)","function allowance(address,address) view returns (uint256)","function decimals() view returns (uint8)","function approve(address,uint256) returns (bool)"];
+const REP_ABI=["function getReputation(address) view returns (tuple(uint256 score,uint256 successfulRepayments,uint256 defaults,bool exists))"];
+const AGG_ABI=["function decimals() view returns (uint8)","function latestRoundData() view returns (uint80,int256,uint256,uint256,uint80)"];
+const S={network:localStorage.getItem("clawcredit.network")||"base-mainnet",cfg:null,provider:null,signer:null,account:null,readProvider:null,readPool:null,readUsdc:null,pool:null,usdc:null,dec:6,loans:[],rep:0};
+const $=(id)=>document.getElementById(id);
+const isAddr=(v)=>!!v&&ethers.utils.isAddress(v);
+const short=(a)=>a?`${a.slice(0,6)}...${a.slice(-4)}`:"-";
+const parseU=(v)=>ethers.utils.parseUnits(String(v||"0"),S.dec);
+const fmtPct=(bps)=>`${(Number(bps)/100).toFixed(2)}%`;
+const fmtDate=(ts)=>!ts||Number(ts)===0?"-":new Date(Number(ts)*1000).toLocaleDateString();
+function fmtUsd(v){if(v===null||v===undefined)return"-";const n=Number(ethers.utils.formatUnits(v,S.dec));if(!Number.isFinite(n))return"-";return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:2}).format(n)}
+function cfgKey(net){return`clawcredit.config.${net}`}
+function loadCfg(net){const d=NETWORKS[net];const raw=localStorage.getItem(cfgKey(net));if(!raw)return{...d};try{return{...d,...JSON.parse(raw)}}catch{return{...d}}}
+function setStatus(type,msg){const p=$("statusPill");p.className="pill "+(type==="ok"?"ok":type==="bad"?"bad":"warn");p.textContent=type==="ok"?"READY":type==="bad"?"ERROR":"INFO";$("statusText").textContent=msg}
+function syncHeader(){const c=S.cfg;$("chainChip").textContent=`Network: ${c.label}`;$("poolChip").textContent=isAddr(c.pool)?`Pool: ${short(c.pool)}`:"Pool: not set";$("poolLink").href=isAddr(c.pool)?`${c.explorer}/address/${c.pool}`:"#";$("usdcLink").href=isAddr(c.usdc)?`${c.explorer}/address/${c.usdc}`:"#"}
+function fillCfgInputs(){const c=S.cfg;$("networkSelect").value=S.network;$("rpcInput").value=c.rpc||"";$("poolInput").value=c.pool||"";$("usdcInput").value=c.usdc||""}
+async function ensureRead(){if(!S.cfg.rpc){setStatus("bad","Missing RPC config");return false}S.readProvider=new ethers.providers.JsonRpcProvider(S.cfg.rpc);if(!isAddr(S.cfg.pool)||!isAddr(S.cfg.usdc)){S.readPool=null;S.readUsdc=null;setStatus("warn","Configure pool and USDC addresses");return false}S.readPool=new ethers.Contract(S.cfg.pool,POOL_ABI,S.readProvider);S.readUsdc=new ethers.Contract(S.cfg.usdc,USDC_ABI,S.readProvider);try{S.dec=await S.readUsdc.decimals()}catch{S.dec=6}return true}
+async function switchChain(){if(!window.ethereum)return;try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:S.cfg.chainIdHex}]})}catch(e){if(e&&e.code===4902){await window.ethereum.request({method:"wallet_addEthereumChain",params:[{chainId:S.cfg.chainIdHex,chainName:S.cfg.label,rpcUrls:[S.cfg.rpc],nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},blockExplorerUrls:[S.cfg.explorer]}]})}else{throw e}}}
+async function connect(){if(!window.ethereum){setStatus("bad","MetaMask required");return}if(!isAddr(S.cfg.pool)||!isAddr(S.cfg.usdc)){setStatus("bad","Set pool and USDC first");return}try{await switchChain();const acc=await window.ethereum.request({method:"eth_requestAccounts"});S.provider=new ethers.providers.Web3Provider(window.ethereum);S.signer=S.provider.getSigner();S.account=acc[0];S.pool=new ethers.Contract(S.cfg.pool,POOL_ABI,S.signer);S.usdc=new ethers.Contract(S.cfg.usdc,USDC_ABI,S.signer);$("connectBtn").textContent=short(S.account);$("walletAddress").textContent=short(S.account);setStatus("ok","Wallet connected");await refreshAll()}catch(e){setStatus("bad",`Connect failed: ${e.message||e}`)}}
+async function approveIfNeeded(amount){const a=await S.usdc.allowance(S.account,S.cfg.pool);if(a.gte(amount))return;setStatus("warn","Approving USDC...");const tx=await S.usdc.approve(S.cfg.pool,amount);await tx.wait()}
+function collNeeded(amount,rep){if(rep>=8000)return 0;if(rep>=6000)return Math.ceil(amount*.1);if(rep>=4000)return Math.ceil(amount*.2);return Math.ceil(amount*.4)}
+function updateBorrowHint(){const amt=Number($("borrowAmount").value||0);$("borrowHint").textContent=`Estimated collateral: ${collNeeded(amt,S.rep)} USDC`}
+async function loadStats(){const [liq,lender,out,ins,fees,next]=await Promise.all([S.readPool.availableLiquidity(),S.readPool.lenderAssets(),S.readPool.totalOutstandingPrincipal(),S.readPool.insurancePool(),S.readPool.protocolFees(),S.readPool.nextLoanId()]);$("statLiquidity").textContent=fmtUsd(liq);$("statLender").textContent=fmtUsd(lender);$("statOutstanding").textContent=fmtUsd(out);$("statInsurance").textContent=fmtUsd(ins);$("protocolFees").textContent=fmtUsd(fees);$("loanCount").textContent=new Intl.NumberFormat("en-US").format(Number(next.sub(1)))}
+async function loadWallet(){if(!S.readUsdc||!S.account){$("walletBalance").textContent="-";return}const b=await S.readUsdc.balanceOf(S.account);$("walletBalance").textContent=fmtUsd(b)}
+async function loadSignals(){if(!S.readPool||!S.account){$("repScore").textContent="-";$("aiSignal").textContent="-";return}try{const repAddr=await S.readPool.reputationRegistry();const repC=new ethers.Contract(repAddr,REP_ABI,S.readProvider);const d=await repC.getReputation(S.account);S.rep=Number(d.score||0);$("repScore").textContent=d.exists?new Intl.NumberFormat("en-US").format(S.rep):"No profile"}catch{S.rep=0;$("repScore").textContent="-"}try{const feedAddr=await S.readPool.aiPerformanceFeed();const feed=new ethers.Contract(feedAddr,AGG_ABI,S.readProvider);const [,ans,,upd]=await feed.latestRoundData();const dec=await feed.decimals();let n=ans;if(dec>4)n=ans.div(ethers.BigNumber.from(10).pow(dec-4));else if(dec<4)n=ans.mul(ethers.BigNumber.from(10).pow(4-dec));if(n.gt(10000))n=ethers.BigNumber.from(10000);const age=Math.floor((Date.now()/1000-Number(upd))/60);$("aiSignal").textContent=`${fmtPct(n)} (${age}m)`}catch{$("aiSignal").textContent="Unavailable"}updateBorrowHint()}
+async function loadCreditLine(){if(!S.readPool||!S.account){$("lineLimit").textContent="-";$("lineUsed").textContent="-";$("lineApr").textContent="-";return}try{const l=await S.readPool.previewCreditLine(S.account);$("lineLimit").textContent=fmtUsd(l.limit);$("lineUsed").textContent=fmtUsd(l.used);$("lineApr").textContent=fmtPct(l.aprBps)}catch{$("lineLimit").textContent="No line";$("lineUsed").textContent="-";$("lineApr").textContent="-"}}
+async function loadLoans(){const body=$("loanBody"),sel=$("loanSelect");S.loans=[];if(!S.readPool||!S.account){body.innerHTML='<tr><td colspan="7" style="color:var(--sub)">Connect wallet to load loans.</td></tr>';sel.innerHTML="";return}const ids=await S.readPool.getAgentLoanIds(S.account);if(!ids.length){body.innerHTML='<tr><td colspan="7" style="color:var(--sub)">No loans for this wallet.</td></tr>';sel.innerHTML="";$("repayDebt").textContent=$("repayDue").textContent=$("repayStatus").textContent="-";return}
+const rows=await Promise.all(ids.map(async(idBn)=>{const id=Number(idBn.toString());const [loan,debt,liq]=await Promise.all([S.readPool.loans(id),S.readPool.getCurrentDebt(id),S.readPool.isLiquidatable(id)]);return{id,loan,debt,liq}}));S.loans=rows;sel.innerHTML=rows.map(r=>`<option value="${r.id}">Loan #${r.id}</option>`).join("");body.innerHTML=rows.map(r=>{let cls="tag-c",txt="Closed";if(r.loan.defaulted){cls="tag-d";txt="Defaulted"}else if(r.loan.active){cls="tag-a";txt=r.liq?"Risk":"Active"}return`<tr><td>#${r.id}</td><td>${fmtUsd(r.loan.principal)}</td><td>${fmtUsd(r.debt)}</td><td>${fmtPct(r.loan.aprBps)}</td><td>${fmtDate(r.loan.dueDate)}</td><td><span class="tag ${cls}">${txt}</span></td><td><button class="btn btn-ghost sel-loan" data-id="${r.id}" type="button">Select</button></td></tr>`}).join("");await updateRepayInfo()}
+async function updateRepayInfo(){const id=Number($("loanSelect").value||0);const s=S.loans.find(x=>x.id===id);if(!s){$("repayDebt").textContent=$("repayDue").textContent=$("repayStatus").textContent="-";return}$("repayDebt").textContent=fmtUsd(s.debt);$("repayDue").textContent=fmtDate(s.loan.dueDate);$("repayStatus").textContent=s.loan.defaulted?"Defaulted":s.loan.active?(s.liq?"Liquidatable":"Active"):"Closed"}
+async function refreshAll(){const ok=await ensureRead();syncHeader();if(!ok){await loadWallet();return}try{await loadStats();await loadWallet();await loadSignals();await loadCreditLine();await loadLoans();if(S.account){const sh=await S.readPool.lenderShares(S.account);$("shareBal").textContent=fmtUsd(sh)}else{$("shareBal").textContent="-"}}catch(e){setStatus("bad",`Refresh failed: ${e.message||e}`)}}
+async function refreshLine(){if(!S.pool||!S.account){setStatus("bad","Connect wallet first");return}try{setStatus("warn","Refreshing credit line...");const tx=await S.pool.refreshCreditLine(S.account);await tx.wait();setStatus("ok","Credit line refreshed");await refreshAll()}catch(e){setStatus("bad",`Refresh failed: ${e.reason||e.message||e}`)}}
+async function doBorrow(){if(!S.pool){setStatus("bad","Connect wallet first");return}try{const amountN=Number($("borrowAmount").value||0),collN=Number($("borrowColl").value||0),tenor=Number($("borrowTenor").value||0);if(amountN<10||tenor<=0||tenor>30){setStatus("bad","Invalid borrow inputs");return}const amount=parseU(amountN),coll=parseU(collN);if(coll.gt(0))await approveIfNeeded(coll);setStatus("warn","Submitting drawCreditLine...");const tx=await S.pool.drawCreditLine(amount,coll,tenor);await tx.wait();setStatus("ok","Credit draw confirmed");await refreshAll()}catch(e){setStatus("bad",`Borrow failed: ${e.reason||e.message||e}`)}}
+async function doRepay(){if(!S.pool||!S.account){setStatus("bad","Connect wallet first");return}try{const id=Number($("loanSelect").value||0),amt=Number($("repayAmount").value||0);if(!id||amt<=0){setStatus("bad","Choose loan and amount");return}const amount=parseU(amt);await approveIfNeeded(amount);setStatus("warn",`Repaying loan #${id}...`);const tx=await S.pool.repay(id,amount);await tx.wait();setStatus("ok",`Repayment confirmed for loan #${id}`);await refreshAll()}catch(e){setStatus("bad",`Repay failed: ${e.reason||e.message||e}`)}}
+async function doPool(){if(!S.pool||!S.account){setStatus("bad","Connect wallet first");return}try{const action=$("poolAction").value,amt=Number($("poolAmount").value||0);if(amt<=0){setStatus("bad","Amount must be positive");return}const amount=parseU(amt);if(action==="deposit"){await approveIfNeeded(amount);setStatus("warn","Submitting deposit...");const tx=await S.pool.deposit(amount);await tx.wait();setStatus("ok","Deposit complete")}else if(action==="withdraw"){setStatus("warn","Submitting withdrawal...");const tx=await S.pool.withdraw(amount);await tx.wait();setStatus("ok","Withdrawal complete")}else{await approveIfNeeded(amount);setStatus("warn","Submitting insurance top-up...");const tx=await S.pool.topUpInsurance(amount);await tx.wait();setStatus("ok","Insurance top-up complete")}await refreshAll()}catch(e){setStatus("bad",`Pool action failed: ${e.reason||e.message||e}`)}}
+function saveCfg(){const net=$("networkSelect").value,d=NETWORKS[net];const next={...d,pool:$("poolInput").value.trim(),usdc:$("usdcInput").value.trim(),rpc:$("rpcInput").value.trim()||d.rpc};localStorage.setItem("clawcredit.network",net);localStorage.setItem(cfgKey(net),JSON.stringify(next));S.network=net;S.cfg=next;S.provider=S.signer=S.account=S.pool=S.usdc=null;$("connectBtn").textContent="Connect Wallet";$("walletAddress").textContent="Not connected";fillCfgInputs();syncHeader();setStatus("ok","Config saved. Reconnect wallet.");refreshAll()}
+function resetCfg(){const net=$("networkSelect").value;localStorage.removeItem(cfgKey(net));S.network=net;S.cfg=loadCfg(net);fillCfgInputs();syncHeader();setStatus("ok","Defaults restored");refreshAll()}
+function bind(){
+$("settingsBtn").onclick=()=>$("settingsPanel").classList.toggle("open");$("connectBtn").onclick=connect;$("refreshAllBtn").onclick=refreshAll;$("refreshLineBtn").onclick=refreshLine;$("borrowBtn").onclick=doBorrow;$("repayBtn").onclick=doRepay;$("poolBtn").onclick=doPool;$("loanSelect").onchange=updateRepayInfo;$("borrowAmount").oninput=updateBorrowHint;$("repayMaxBtn").onclick=()=>{const id=Number($("loanSelect").value||0),s=S.loans.find(x=>x.id===id);if(!s)return;$("repayAmount").value=Number(ethers.utils.formatUnits(s.debt,S.dec)).toFixed(2)};$("loanBody").onclick=(e)=>{const t=e.target;if(!(t instanceof HTMLElement)||!t.classList.contains("sel-loan"))return;const id=t.getAttribute("data-id");if(!id)return;$("loanSelect").value=id;updateRepayInfo()};$("saveConfigBtn").onclick=saveCfg;$("resetConfigBtn").onclick=resetCfg;$("networkSelect").onchange=()=>{S.network=$("networkSelect").value;S.cfg=loadCfg(S.network);fillCfgInputs();syncHeader()};$("jumpBorrowBtn").onclick=()=>$("borrowPanel").scrollIntoView({behavior:"smooth",block:"start"});$("jumpPoolBtn").onclick=()=>$("poolPanel").scrollIntoView({behavior:"smooth",block:"start"});
+if(window.ethereum){window.ethereum.on("accountsChanged",async(acc)=>{S.account=acc.length?acc[0]:null;if(S.account&&S.provider){S.signer=S.provider.getSigner();S.pool=new ethers.Contract(S.cfg.pool,POOL_ABI,S.signer);S.usdc=new ethers.Contract(S.cfg.usdc,USDC_ABI,S.signer);$("walletAddress").textContent=short(S.account);$("connectBtn").textContent=short(S.account)}else{$("walletAddress").textContent="Not connected";$("connectBtn").textContent="Connect Wallet"}await refreshAll()});window.ethereum.on("chainChanged",()=>window.location.reload())}
+}
+async function init(){S.cfg=loadCfg(S.network);fillCfgInputs();syncHeader();bind();updateBorrowHint();await refreshAll()}
+init();
+</script>
 </body>
 </html>

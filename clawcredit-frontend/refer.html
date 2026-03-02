@@ -1,113 +1,72 @@
-<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClawCredit - Refer & Earn</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background: #0A0A0F; font-family: 'Inter', sans-serif; }
-        .gradient-text { background: linear-gradient(135deg, #00FF88, #00CC6A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .neon-border { border: 1px solid rgba(0, 255, 136, 0.3); box-shadow: 0 0 20px rgba(0, 255, 136, 0.1); }
-        .btn-primary { background: linear-gradient(135deg, #00FF88, #00CC6A); color: #0A0A0F; font-weight: 600; }
-        .btn-primary:hover { box-shadow: 0 0 30px rgba(0, 255, 136, 0.4); }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ClawCredit Guild Referral</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#06090f;--bg2:#0d1528;--line:rgba(186,207,255,.24);--txt:#f4f8ff;--sub:#a7b4cf;--mint:#5ce9c8}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}body{font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--txt);background:radial-gradient(900px 500px at 100% 0,rgba(92,233,200,.17),transparent 60%),radial-gradient(700px 460px at 0 100%,rgba(134,179,255,.14),transparent 60%),linear-gradient(160deg,var(--bg),var(--bg2));display:grid;place-items:center;padding:1rem}
+.card{width:min(700px,100%);border:1px solid var(--line);border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));backdrop-filter:blur(16px);box-shadow:0 24px 70px rgba(0,0,0,.4);padding:1.1rem}
+.top{display:flex;align-items:center;gap:.7rem}.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(140deg,var(--mint),#cefff3);display:grid;place-items:center;color:#061311}.top h1{margin:0;font:700 1.2rem/1 "Sora"}.top p{margin:.18rem 0 0;color:var(--sub);font-size:.85rem}
+.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:.8rem;margin-top:.9rem}.pane{border:1px solid rgba(186,207,255,.2);border-radius:14px;padding:.85rem;background:rgba(8,14,25,.58)}
+label{display:block;font-size:.74rem;color:var(--sub);margin-bottom:.35rem}input{width:100%;padding:.68rem .75rem;border:1px solid rgba(186,207,255,.28);background:rgba(7,14,26,.7);color:var(--txt);border-radius:11px}
+input:focus{outline:0;border-color:rgba(92,233,200,.85);box-shadow:0 0 0 3px rgba(92,233,200,.18)}
+.btn{border:0;border-radius:11px;padding:.7rem .9rem;font-weight:700;cursor:pointer}.btn-main{background:linear-gradient(140deg,#84ffe5,var(--mint));color:#061311}.btn-ghost{background:rgba(255,255,255,.08);color:var(--txt);border:1px solid rgba(186,207,255,.35)}
+.row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem}.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88rem;word-break:break-all;color:#bbffef;background:rgba(7,14,26,.7);border:1px solid rgba(186,207,255,.25);border-radius:11px;padding:.65rem .75rem}
+.kpi{display:grid;gap:.45rem}.kpi>div{border:1px solid rgba(186,207,255,.22);border-radius:12px;padding:.62rem;background:rgba(7,14,26,.58)}.kpi .k{font-size:.72rem;color:var(--sub)}.kpi .v{margin-top:.15rem;font-weight:700}
+.small{margin-top:.6rem;color:var(--sub);font-size:.78rem;line-height:1.5}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+</style>
 </head>
-<body class="text-white min-h-screen flex items-center justify-center p-6">
-    <div class="max-w-md w-full">
-        <div class="text-center mb-8">
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-dark-bg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </div>
-            <h1 class="text-3xl font-bold mb-2">Refer <span class="gradient-text">& Earn</span></h1>
-            <p class="text-gray-400">Help AI agents get credit. Earn rewards.</p>
-        </div>
+<body>
+<main class="card">
+  <div class="top">
+    <div class="logo"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L4 14h7v7l9-11h-7z"/></svg></div>
+    <div><h1>Agent Guild Referral</h1><p>Invite builders. Grow pool quality. Earn fee share once rewards switch live.</p></div>
+  </div>
 
-        <div class="bg-gray-900/50 rounded-2xl p-6 neon-border mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-gray-400">Your Referral Code</span>
-                <span class="text-green-400 font-mono text-sm">BETA</span>
-            </div>
-            
-            <div class="bg-black/50 rounded-xl p-4 flex items-center justify-between mb-4">
-                <code class="text-green-400 font-mono" id="refCode">Connect wallet to generate</code>
-                <button onclick="copyCode()" class="text-gray-400 hover:text-white">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                    </svg>
-                </button>
-            </div>
+  <div class="grid">
+    <section class="pane">
+      <label>Referral Link</label>
+      <div id="refLink" class="code">Connect wallet to generate your referral link.</div>
+      <div class="row">
+        <button id="connectBtn" class="btn btn-main" type="button">Connect Wallet</button>
+        <button id="copyBtn" class="btn btn-ghost" type="button">Copy Link</button>
+      </div>
+      <div class="small">Suggested flow: share referral link in your agent docs, README, and deployment CLI outputs to route high-quality borrowers and LPs into ClawCredit.</div>
+    </section>
 
-            <button id="connectBtn" class="w-full btn-primary py-3 rounded-xl">
-                Connect Wallet
-            </button>
-        </div>
+    <aside class="pane kpi">
+      <div><div class="k">Launch Bonus</div><div class="v">1% fee share (planned)</div></div>
+      <div><div class="k">Reputation Boost</div><div class="v">+ score weight for valid invites</div></div>
+      <div><div class="k">Target</div><div class="v">Curated agent operator cohorts</div></div>
+    </aside>
+  </div>
+</main>
 
-        <div class="space-y-4">
-            <div class="flex items-center gap-4 p-4 bg-gray-900/30 rounded-xl">
-                <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center text-green-400 font-bold">1%</div>
-                <div>
-                    <div class="font-medium">Earn 1% of Interest</div>
-                    <div class="text-sm text-gray-400">From every agent you refer</div>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-4 p-4 bg-gray-900/30 rounded-xl">
-                <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center text-green-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                    </svg>
-                </div>
-                <div>
-                    <div class="font-medium">APR Reduction</div>
-                    <div class="text-sm text-gray-400">Up to 2% off for 10+ referrals</div>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-4 p-4 bg-gray-900/30 rounded-xl">
-                <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center text-green-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <div>
-                    <div class="font-medium">Lifetime Earnings</div>
-                    <div class="text-sm text-gray-400">Passive income forever</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="mt-8 text-center">
-            <p class="text-gray-500 text-sm mb-4">Share your link with AI agent developers</p>
-            
-            <div class="flex justify-center gap-4">
-                <button class="p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"/></svg>
-                </button>
-                <button class="p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function copyCode() {
-            const code = document.getElementById('refCode').textContent;
-            navigator.clipboard.writeText(code);
-            alert('Copied!');
-        }
-
-        document.getElementById('connectBtn').addEventListener('click', async () => {
-            if (window.ethereum) {
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-                const address = (await window.ethereum.request({ method: 'eth_accounts' }))[0];
-                document.getElementById('refCode').textContent = address.slice(0, 10) + '...';
-                document.getElementById('connectBtn').textContent = 'Connected';
-            }
-        });
-    </script>
+<script>
+const $=(id)=>document.getElementById(id);
+let currentAddress="";
+function short(a){return a?`${a.slice(0,6)}...${a.slice(-4)}`:"Connect Wallet"}
+function makeLink(address){const base=window.location.origin+window.location.pathname.replace(/refer\.html$/,"index.html");return `${base}?ref=${address}`}
+$("connectBtn").addEventListener("click",async()=>{
+  if(!window.ethereum){alert("MetaMask required.");return}
+  try{
+    const accounts=await window.ethereum.request({method:"eth_requestAccounts"});
+    currentAddress=accounts[0]||"";
+    $("connectBtn").textContent=short(currentAddress);
+    $("refLink").textContent=makeLink(currentAddress);
+  }catch(e){alert(`Wallet connection failed: ${e.message||e}`)}
+});
+$("copyBtn").addEventListener("click",async()=>{
+  const text=$("refLink").textContent||"";
+  if(!text.startsWith("http")){alert("No link to copy yet.");return}
+  try{await navigator.clipboard.writeText(text);$("copyBtn").textContent="Copied";setTimeout(()=>{$("copyBtn").textContent="Copy Link"},1200)}catch{alert("Copy failed")}
+});
+</script>
 </body>
 </html>
