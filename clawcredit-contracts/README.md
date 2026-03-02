@@ -5,6 +5,12 @@ Goal: allow Clawdbot to continue development without missing context.
 
 ## 1) Project Snapshot
 
+## Production Deployment Policy
+
+- **Production path:** `script/DeployV3Standard.s.sol` only.
+- `script/Deploy.s.sol` is a deprecated sentinel and intentionally blocks direct use.
+- Legacy contracts (`ClawCreditUltimateV2`, `ClawCreditUltimateV3`, `ClawCreditMVP`) are **NOT FOR MAINNET**.
+
 - Product: reputation-first AI agent credit protocol on Base
 - Stack level:
 - Production core lending engine: `src/ClawCreditAgentStandardV3.sol`

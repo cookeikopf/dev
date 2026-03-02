@@ -57,7 +57,8 @@ contract AIPerformanceOracle is AccessControl, Pausable, AggregatorV3Interface {
     mapping(address => uint256) public reporterReputation;
     mapping(address => uint256) public slashCount;
     
-    uint256 public constant MIN_STAKE = 5 ether;       // 5 ETH-denominated stake (wei)
+    uint256 public minStakeWei = 5 ether;              // ETH-denominated stake in wei (governable)
+    uint256 public constant MAX_MIN_STAKE = 100 ether;
     uint256 public constant MIN_REPORTERS = 3;         // Need 3+ reports
     uint256 public constant REPORT_TIMEOUT = 1 hours;  // Consensus window
     uint256 public constant MAX_VARIANCE = 2000;       // 20% max variance
@@ -77,6 +78,7 @@ contract AIPerformanceOracle is AccessControl, Pausable, AggregatorV3Interface {
     event ConsensusReached(address indexed agent, uint256 score, uint256 timestamp);
     event ReporterSlashed(address reporter, uint256 amount, string reason);
     event ReporterRewarded(address reporter, uint256 amount);
+    event MinStakeUpdated(uint256 oldMinStakeWei, uint256 newMinStakeWei);
     
     // ============ ERRORS ============
     error InsufficientStake();
@@ -95,7 +97,7 @@ contract AIPerformanceOracle is AccessControl, Pausable, AggregatorV3Interface {
         if (slashCount[msg.sender] >= 3) revert ReporterBanned();
         
         reporterStake[msg.sender] += msg.value;
-        if (reporterStake[msg.sender] >= MIN_STAKE) {
+        if (reporterStake[msg.sender] >= minStakeWei) {
             _grantRole(REPORTER_ROLE, msg.sender);
         }
     }
@@ -106,11 +108,18 @@ contract AIPerformanceOracle is AccessControl, Pausable, AggregatorV3Interface {
         // Check no active reports
         reporterStake[msg.sender] -= amount;
         
-        if (reporterStake[msg.sender] < MIN_STAKE) {
+        if (reporterStake[msg.sender] < minStakeWei) {
             _revokeRole(REPORTER_ROLE, msg.sender);
         }
         
         payable(msg.sender).transfer(amount);
+    }
+
+    function setMinStakeWei(uint256 newMinStakeWei) external onlyRole(ADMIN_ROLE) {
+        require(newMinStakeWei >= 1 ether && newMinStakeWei <= MAX_MIN_STAKE, "min stake out of bounds");
+        uint256 old = minStakeWei;
+        minStakeWei = newMinStakeWei;
+        emit MinStakeUpdated(old, newMinStakeWei);
     }
     
     // ============ METRICS REPORTING ============

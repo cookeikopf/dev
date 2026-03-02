@@ -4,11 +4,10 @@ pragma solidity 0.8.20;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import {AggregatorV3Interface} from "./interfaces/AggregatorV3Interface.sol";
 import {IAgentStandard} from "./interfaces/IAgentStandard.sol";
 import {IAgentUnderwriterModel} from "./interfaces/IAgentUnderwriterModel.sol";
@@ -20,7 +19,6 @@ import {IERC8004Reputation} from "./interfaces/IERC8004Reputation.sol";
 /// reinsurance, and cross-chain credit passport support.
 contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, EIP712, IAgentStandard {
     using SafeERC20 for IERC20;
-    using ECDSA for bytes32;
 
     bytes32 public constant GUARDIAN_ROLE = keccak256("GUARDIAN_ROLE");
     bytes32 public constant RISK_MANAGER_ROLE = keccak256("RISK_MANAGER_ROLE");
@@ -50,6 +48,7 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
     uint256 public maxTenorDays = 45;
     uint256 public gracePeriod = 3 days;
     uint256 public oracleHeartbeat = 2 hours;
+    uint256 public taskEscrowHaircutBps = 9_000;
 
     uint256 public originationFeeBps = 200;
     uint256 public insuranceFeeBps = 500;
@@ -74,7 +73,6 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
     bytes32 private constant _SOCIAL_VERIFICATION_TYPEHASH = keccak256(
         "SocialVerification(address subject,address verifier,bytes32 action,uint256 chainId,address contractAddress,uint256 nonce,uint256 deadline,bytes32 payloadHash)"
     );
-    bytes4 private constant _EIP1271_MAGICVALUE = 0x1626ba7e;
 
     struct TrancheState {
         uint256 assets;
@@ -111,6 +109,7 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
 
     uint256 public nextTaskId = 1;
     mapping(uint256 => TaskReceivable) public tasks;
+    mapping(uint256 => uint256) public taskLoan;
 
     struct Covenant {
         uint16 minTaskCompletionBps;
@@ -473,8 +472,11 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
 
         uint256 escrowBalance;
         if (escrowed) {
-            escrowBalance = receivable;
-            usdc.safeTransferFrom(msg.sender, address(this), escrowBalance);
+            uint256 balBefore = usdc.balanceOf(address(this));
+            usdc.safeTransferFrom(msg.sender, address(this), receivable);
+            uint256 balAfter = usdc.balanceOf(address(this));
+            escrowBalance = balAfter - balBefore;
+            if (escrowBalance == 0) revert InvalidAmount();
         }
 
         taskId = nextTaskId++;
@@ -504,7 +506,7 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
         if (block.timestamp > deadline) revert InvalidAmount();
         if (!(hasRole(ORACLE_MANAGER_ROLE, verifier) || hasRole(VERIFIER_ROLE, verifier))) revert DelegationUnavailable();
 
-        uint256 nonce = verificationNonces[subject][verifier]++;
+        uint256 nonce = verificationNonces[subject][verifier];
         bytes32 digest = _hashTypedDataV4(
             keccak256(
                 abi.encode(
@@ -522,6 +524,7 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
         );
 
         _validateVerifierSignature(verifier, digest, signature);
+        verificationNonces[subject][verifier] = nonce + 1;
         socialVerified[subject] = true;
         socialProof[subject] = payloadHash;
         emit SocialVerified(subject, verifier, payloadHash, nonce);
@@ -532,8 +535,14 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
         if (task.agent == address(0) || task.settled) revert TaskUnavailable();
         if (msg.sender != task.agent && !hasRole(EARNINGS_HOOK_ROLE, msg.sender)) revert DelegationUnavailable();
 
+        if (amount > 0) {
+            usdc.safeTransferFrom(msg.sender, address(this), amount);
+        }
+
+        (uint256 toPool, uint256 toAgent) = _repayTaskLinkedLoan(taskId, amount, task.agent);
         task.settled = true;
-        emit TaskSettled(taskId, amount);
+        emit TaskEscrowReleased(taskId, toPool, toAgent);
+        emit TaskSettled(taskId, toPool + toAgent);
     }
 
     function releaseTaskPayment(uint256 taskId) external nonReentrant whenNotPaused {
@@ -545,32 +554,7 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
         uint256 escrow = task.escrowBalance;
         task.escrowBalance = 0;
 
-        uint256 toPool;
-        uint256 toAgent;
-        if (escrow > 0) {
-            uint256[] storage loanIds = _agentLoans[task.agent];
-            for (uint256 i = 0; i < loanIds.length; i++) {
-                Loan storage loan = loans[loanIds[i]];
-                if (!loan.active || loan.mode != 1 || loan.taskId != taskId) continue;
-                _accrueInterest(loan);
-                uint256 debt = _currentDebt(loan);
-                uint256 repayAmt = escrow > debt ? debt : escrow;
-                if (repayAmt > 0) {
-                    _applyRepaymentAccounting(loan, repayAmt);
-                    escrow -= repayAmt;
-                    toPool += repayAmt;
-                }
-                if (_currentDebt(loan) == 0) {
-                    _closeLoan(loanIds[i], loan, true);
-                }
-                if (escrow == 0) break;
-            }
-            if (escrow > 0) {
-                toAgent = escrow;
-                _checkLiquidBalance(toAgent);
-                usdc.safeTransfer(task.agent, toAgent);
-            }
-        }
+        (uint256 toPool, uint256 toAgent) = _repayTaskLinkedLoan(taskId, escrow, task.agent);
 
         emit TaskEscrowReleased(taskId, toPool, toAgent);
         emit TaskSettled(taskId, toPool + toAgent);
@@ -808,6 +792,8 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
         if (task.agent != msg.sender || task.settled || !task.escrowed) revert TaskUnavailable();
         if (task.escrowBalance == 0) revert TaskUnavailable();
         if (task.dueDate < block.timestamp + tenorDays * 1 days) revert TaskUnavailable();
+        uint256 maxBorrow = (uint256(task.escrowBalance) * taskEscrowHaircutBps) / BPS;
+        if (amount > maxBorrow) revert BorrowCapExceeded();
 
         uint256 coverageBps = task.escrowBalance == 0 ? 0 : (uint256(task.escrowBalance) * BPS) / amount;
         if (coverageBps < BPS) revert TaskUnavailable();
@@ -1136,6 +1122,12 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
         emit ConfigUpdated();
     }
 
+    function setTaskEscrowHaircutBps(uint256 newHaircutBps) external onlyRole(RISK_MANAGER_ROLE) {
+        if (newHaircutBps == 0 || newHaircutBps > BPS) revert InvalidAmount();
+        taskEscrowHaircutBps = newHaircutBps;
+        emit ConfigUpdated();
+    }
+
     function getCurrentDebt(uint256 loanId) external view returns (uint256) {
         Loan memory loan = loans[loanId];
         if (!loan.active) return 0;
@@ -1216,6 +1208,9 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
 
         _agentExposure[borrower] += amount;
         _agentLoans[borrower].push(loanId);
+        if (taskId != 0) {
+            taskLoan[taskId] = loanId;
+        }
         reservedIntentCredit += netCredit;
         totalOutstandingPrincipal += amount;
 
@@ -1524,6 +1519,7 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
             uint80 answeredInRound
         ) {
             if (answer <= 0) return 5_000;
+            if (updatedAt == 0) return 5_000;
             if (answeredInRound < roundId) return 5_000;
             if (block.timestamp > updatedAt + oracleHeartbeat) return 5_000;
 
@@ -1548,6 +1544,7 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
             uint80 answeredInRound
         ) {
             if (answer <= 0) return (false, 0);
+            if (updatedAt == 0) return (false, 0);
             if (answeredInRound < roundId) return (false, 0);
             if (block.timestamp > updatedAt + oracleHeartbeat) return (false, 0);
 
@@ -1598,14 +1595,39 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
         emit EmergencyTokenRecovered(token, recipient, amount);
     }
 
-    function _validateVerifierSignature(address verifier, bytes32 digest, bytes calldata signature) internal view {
-        if (verifier.code.length > 0) {
-            bytes4 result = IERC1271(verifier).isValidSignature(digest, signature);
-            if (result != _EIP1271_MAGICVALUE) revert UnauthorizedIntent();
-        } else {
-            address recovered = digest.recover(signature);
-            if (recovered != verifier) revert UnauthorizedIntent();
+    function _repayTaskLinkedLoan(uint256 taskId, uint256 funds, address agent)
+        internal
+        returns (uint256 toPool, uint256 toAgent)
+    {
+        uint256 linkedLoanId = taskLoan[taskId];
+        if (funds == 0) return (0, 0);
+
+        if (linkedLoanId != 0) {
+            Loan storage loan = loans[linkedLoanId];
+            if (loan.active && loan.mode == 1 && loan.taskId == taskId) {
+                _accrueInterest(loan);
+                uint256 debt = _currentDebt(loan);
+                uint256 repayAmt = funds > debt ? debt : funds;
+                if (repayAmt > 0) {
+                    _applyRepaymentAccounting(loan, repayAmt);
+                    funds -= repayAmt;
+                    toPool = repayAmt;
+                }
+                if (_currentDebt(loan) == 0) {
+                    _closeLoan(linkedLoanId, loan, true);
+                }
+            }
         }
+
+        if (funds > 0) {
+            toAgent = funds;
+            _checkLiquidBalance(toAgent);
+            usdc.safeTransfer(agent, toAgent);
+        }
+    }
+
+    function _validateVerifierSignature(address verifier, bytes32 digest, bytes calldata signature) internal view {
+        if (!SignatureChecker.isValidSignatureNow(verifier, digest, signature)) revert UnauthorizedIntent();
     }
 
 }
