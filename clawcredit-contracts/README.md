@@ -7,28 +7,19 @@ Goal: allow Clawdbot to continue development without missing context.
 
 - Product: reputation-first AI agent credit protocol on Base
 - Stack level:
-- V2 core lending engine: `src/ClawCreditUltimateV2.sol`
-- V3 agent finance OS: `src/ClawCreditAgentStandardV3.sol`
+- Production core lending engine: `src/ClawCreditAgentStandardV3.sol`
+- Legacy contracts (`ClawCreditUltimateV2`, `ClawCreditUltimateV3`, `ClawCreditMVP`) are DEPRECATED / NOT FOR MAINNET
 - Language/tooling: Solidity 0.8.20 + Foundry + OpenZeppelin v5
 - Governance model: AccessControl roles, designed for Timelock-controlled admin
 
 ## 2) Current Architecture
 
-### V2 (Lean Production Core)
-File: `src/ClawCreditUltimateV2.sol`
+### Legacy (Deprecated)
+Files: `src/ClawCreditUltimateV2.sol`, `src/ClawCreditUltimateV3.sol`, `src/ClawCreditMVP.sol`
 
-Implements:
-- lender pool shares
-- dynamic credit lines
-- reputation + AI oracle underwriting
-- flash loans
-- x402-style auto repayment hook integration
-- liquidation and insurance bucket
-- isolation mode / agent whitelist
+These are DEPRECATED / NOT FOR MAINNET and excluded from production deployment scripts.
 
-Use V2 if you need a simpler deployment footprint and faster integration.
-
-### V3 (Agent Standard Layer)
+### V3 (Agent Standard Layer - Production)
 File: `src/ClawCreditAgentStandardV3.sol`
 
 Implements:
@@ -48,8 +39,10 @@ Use V3 if your objective is "industry standard" agent credit infra.
 ## 3) Repository Map
 
 - Contracts:
-- `src/ClawCreditUltimateV2.sol`
-- `src/ClawCreditAgentStandardV3.sol`
+- `src/ClawCreditAgentStandardV3.sol` (production)
+- `src/ClawCreditUltimateV2.sol` (deprecated)
+- `src/ClawCreditUltimateV3.sol` (deprecated)
+- `src/ClawCreditMVP.sol` (deprecated)
 
 - Interfaces:
 - `src/interfaces/IERC8004Reputation.sol`
@@ -68,12 +61,12 @@ Use V3 if your objective is "industry standard" agent credit infra.
 - `test/mocks/MockFlashBorrower.sol`
 
 - Tests:
-- `test/ClawCreditUltimateV2.t.sol`
-- `test/ClawCreditAgentStandardV3.t.sol`
+- `test/ClawCreditAgentStandardV3.t.sol` (production test suite)
+- `test/ClawCreditUltimateV2.t.sol` (legacy)
 
 - Deployment scripts:
-- `script/Deploy.s.sol` (V2)
-- `script/DeployV3Standard.s.sol` (V3)
+- `script/DeployV3Standard.s.sol` (production)
+- `script/Deploy.s.sol` (deprecated wrapper to V3 standard)
 
 - Config/env:
 - `foundry.toml`
@@ -135,15 +128,6 @@ forge build
 ### Test
 ```bash
 forge test -vv
-```
-
-### Deploy V2 (Base Sepolia)
-```bash
-forge script script/Deploy.s.sol:Deploy \
-  --rpc-url $BASE_SEPOLIA_RPC_URL \
-  --broadcast \
-  --verify \
-  --etherscan-api-key $BASESCAN_API_KEY
 ```
 
 ### Deploy V3 (Base Sepolia)
@@ -219,7 +203,7 @@ When Clawdbot resumes work, start with:
 2. Inspect V3 first: `src/ClawCreditAgentStandardV3.sol`.
 3. Run build/tests locally.
 4. Triage remaining work from section 9 + checklist section 10.
-5. Keep V2 stable, make forward features in V3 unless explicitly requested otherwise.
+5. Use V3 standard for all production-forward changes. Keep legacy contracts explicitly deprecated.
 
 Recommended immediate next coding tasks:
 - add invariant tests for liability conservation and withdrawal safety
