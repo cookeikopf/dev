@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClawCredit - Credit for AI Agents</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0e27;
+            color: #fff;
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00d4aa, #00a8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            list-style: none;
+        }
+        .nav-links a {
+            color: #8b92b9;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover { color: #fff; }
+        .nav-cta {
+            background: linear-gradient(135deg, #00d4aa, #00a8ff);
+            color: #0a0e27;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.3s;
+        }
+        .nav-cta:hover { transform: translateY(-2px); }
+        
+        /* Hero Section */
+        .hero {
+            padding: 160px 0 100px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(0,212,170,0.15) 0%, transparent 70%);
+            z-index: 0;
+        }
+        .hero-content { position: relative; z-index: 1; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,212,170,0.1);
+            border: 1px solid rgba(0,212,170,0.3);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 14px;
+            color: #00d4aa;
+            margin-bottom: 32px;
+        }
+        .badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #00d4aa;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .hero h1 {
+            font-size: 72px;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            letter-spacing: -0.02em;
+        }
+        .hero h1 span {
+            background: linear-gradient(135deg, #00d4aa, #00a8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p {
+            font-size: 20px;
+            color: #8b92b9;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4aa, #00a8ff);
+            color: #0a0e27;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0,212,170,0.3);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+        }
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        /* Stats Section */
+        .stats {
+            padding: 80px 0;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+        }
+        .stat-item { text-align: center; }
+        .stat-value {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00d4aa, #00a8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #8b92b9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 120px 0;
+        }
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        .section-header h2 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .section-header p {
+            font-size: 18px;
+            color: #8b92b9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+        .feature-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 24px;
+            padding: 40px;
+            transition: all 0.3s;
+        }
+        .feature-card:hover {
+            background: rgba(255,255,255,0.05);
+            transform: translateY(-4px);
+        }
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, rgba(0,212,170,0.2), rgba(0,168,255,0.2));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 24px;
+        }
+        .feature-card h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .feature-card p {
+            color: #8b92b9;
+            font-size: 16px;
+        }
+        
+        /* How It Works */
+        .how-it-works {
+            padding: 120px 0;
+            background: rgba(255,255,255,0.02);
+        }
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .step {
+            display: flex;
+            gap: 32px;
+            align-items: flex-start;
+        }
+        .step-number {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #00d4aa, #00a8ff);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: #0a0e27;
+            flex-shrink: 0;
+        }
+        .step-content h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .step-content p {
+            color: #8b92b9;
+            font-size: 16px;
+        }
+        
+        /* CTA Section */
+        .cta {
+            padding: 120px 0;
+            text-align: center;
+        }
+        .cta-box {
+            background: linear-gradient(135deg, rgba(0,212,170,0.1), rgba(0,168,255,0.1));
+            border: 1px solid rgba(0,212,170,0.2);
+            border-radius: 32px;
+            padding: 80px;
+        }
+        .cta h2 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .cta p {
+            font-size: 18px;
+            color: #8b92b9;
+            margin-bottom: 40px;
+        }
+        
+        /* Footer */
+        footer {
+            padding: 60px 0;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .footer-links {
+            display: flex;
+            gap: 32px;
+        }
+        .footer-links a {
+            color: #8b92b9;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .footer-links a:hover { color: #fff; }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 40px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .features-grid { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
+            .step { flex-direction: column; align-items: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">⚡ ClawCredit</div>
+                <ul class="nav-links">
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="#docs">Docs</a></li>
+                    <li><a href="https://github.com/cookeikopf/dev">GitHub</a></li>
+                </ul>
+                <a href="#launch" class="nav-cta">Get Credit</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="badge">🚀 Now Live on Base</div>
+                <h1>The First Credit Protocol<br>for <span>AI Agents</span></h1>
+                <p>Enable your autonomous agents to fund themselves. Instant micro-loans from $10-$500 with reputation-based underwriting. No collateral required for trusted agents.</p>
+                <div class="hero-cta">
+                    <a href="#launch" class="btn-primary">Request Credit</a>
+                    <a href="#docs" class="btn-secondary">Read Docs</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">$0</div>
+                    <div class="stat-label">Total Volume</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Active Agents</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">0%</div>
+                    <div class="stat-label">Default Rate</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">30s</div>
+                    <div class="stat-label">Avg Approval</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Built for Autonomous Agents</h2>
+                <p>Traditional DeFi requires 150%+ collateral. ClawCredit uses reputation, performance, and task-backed security.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI-Native Underwriting</h3>
+                    <p>Our AI oracle assesses agent performance in real-time. Task completion rate, consistency, and client satisfaction determine creditworthiness.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>30-Second Approval</h3>
+                    <p>No human review. No paperwork. Just code. Agents request credit on-chain and receive USDC instantly.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Auto-Repayment</h3>
+                    <p>Integrated with x402 protocol. Agents automatically repay 10-20% of earnings. Set it and forget it.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Progressive Credit</h3>
+                    <p>Start with $50 and 50% collateral. Build reputation to unlock $500 with 0% collateral. Earn your way to trust.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Task-Backed Loans</h3>
+                    <p>Use future task payments as collateral. Client escrows payment, you borrow 80% immediately. No waiting.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔗</div>
+                    <h3>ERC-8004 Standard</h3>
+                    <p>Portable reputation across dApps. Your agent's credit score works everywhere, not just on ClawCredit.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>How It Works</h2>
+                <p>From credit request to funding in 30 seconds.</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Request Credit</h3>
+                        <p>Your agent calls requestLoan() on-chain with desired amount and collateral. No human intervention required.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>AI Assessment</h3>
+                        <p>Our decentralized oracle network assesses your agent's performance, reputation score, and task history in real-time.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Instant Funding</h3>
+                        <p>If approved, USDC is transferred to your agent's wallet within seconds. Start executing tasks immediately.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Auto-Repay</h3>
+                        <p>x402 protocol automatically deducts 10-20% of earnings. No manual repayment needed. Build reputation with each payment.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta" id="launch">
+        <div class="container">
+            <div class="cta-box">
+                <h2>Ready to Fund Your Agents?</h2>
+                <p>Join the first credit protocol built specifically for AI agents. Launching on Base mainnet.</p>
+                <a href="https://github.com/cookeikopf/dev" class="btn-primary" style="font-size: 18px; padding: 20px 40px;">Get Started</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">⚡ ClawCredit</div>
+                <div class="footer-links">
+                    <a href="https://github.com/cookeikopf/dev">GitHub</a>
+                    <a href="#docs">Documentation</a>
+                    <a href="https://twitter.com/clawcredit">Twitter</a>
+                    <a href="mailto:hello@clawcredit.io">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Animate stats on scroll
+        const observerOptions = {
+            threshold: 0.5,
+            rootMargin: '0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .step').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>

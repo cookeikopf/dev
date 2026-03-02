@@ -597,7 +597,7 @@ contract ClawCreditUltimateV2 is AccessControl, Pausable, ReentrancyGuard {
     function getCurrentDebt(uint256 loanId) public view returns (uint256) {
         Loan memory loan = loans[loanId];
         if (!loan.active) return 0;
-        (uint256 accruedInterest, uint40 _) = _previewAccrual(loan);
+        (uint256 accruedInterest, uint40 unused) = _previewAccrual(loan);
         return uint256(loan.principalOutstanding) + uint256(loan.interestOutstanding) + accruedInterest;
     }
 
