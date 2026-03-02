@@ -57,7 +57,7 @@ contract AIPerformanceOracle is AccessControl, Pausable, AggregatorV3Interface {
     mapping(address => uint256) public reporterReputation;
     mapping(address => uint256) public slashCount;
     
-    uint256 public constant MIN_STAKE = 5000e6;        // $5000 to be reporter
+    uint256 public constant MIN_STAKE = 5 ether;       // 5 ETH-denominated stake (wei)
     uint256 public constant MIN_REPORTERS = 3;         // Need 3+ reports
     uint256 public constant REPORT_TIMEOUT = 1 hours;  // Consensus window
     uint256 public constant MAX_VARIANCE = 2000;       // 20% max variance
