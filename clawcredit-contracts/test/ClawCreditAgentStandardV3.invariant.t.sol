@@ -19,6 +19,7 @@ contract V3InvariantHandler is Test {
 
     uint256[] internal trackedLoans;
     mapping(uint256 => uint256) internal lastObservedDebt;
+    uint256[] internal trackedTasks;
 
     constructor(ClawCreditAgentStandardV3 _pool, MockUSDC _usdc, address _lender, address _agent, uint16 _underwriterId) {
         pool = _pool;
@@ -86,6 +87,34 @@ contract V3InvariantHandler is Test {
 
     function trackedLoanAt(uint256 i) external view returns (uint256) {
         return trackedLoans[i];
+    }
+
+    function createEscrowTask(uint96 receivable, uint16 dueInDays) external {
+        uint256 amount = bound(uint256(receivable), 1e6, 40e6);
+        uint256 daysForward = bound(uint256(dueInDays), 3, 30);
+
+        vm.prank(agent);
+        uint256 taskId = pool.createTaskReceivable(amount, uint40(block.timestamp + daysForward * 1 days), keccak256("inv-task"), true);
+        trackedTasks.push(taskId);
+    }
+
+    function releaseEscrowTask(uint8 idx) external {
+        if (trackedTasks.length == 0) return;
+        uint256 i = bound(uint256(idx), 0, trackedTasks.length - 1);
+        uint256 taskId = trackedTasks[i];
+        (, , uint96 escrowBalance, , bool escrowed, bool settled) = pool.tasks(taskId);
+        if (!escrowed || settled || escrowBalance == 0) return;
+
+        vm.prank(agent);
+        pool.releaseTaskPayment(taskId);
+    }
+
+    function trackedTasksLength() external view returns (uint256) {
+        return trackedTasks.length;
+    }
+
+    function trackedTaskAt(uint256 i) external view returns (uint256) {
+        return trackedTasks[i];
     }
 }
 
@@ -162,6 +191,23 @@ contract ClawCreditAgentStandardV3InvariantTest is StdInvariant, Test {
             }
         }
         assertGe(usdc.balanceOf(agent), beforeBal);
+    }
+
+    function invariant_poolBalanceCoversTaskEscrowLiability() public {
+        assertGe(usdc.balanceOf(address(pool)), pool.totalTaskEscrowLiability());
+    }
+
+    function invariant_trackedTasksMatchEscrowLiability() public {
+        uint256 trackedLiability;
+        uint256 len = handler.trackedTasksLength();
+        for (uint256 i = 0; i < len; i++) {
+            uint256 taskId = handler.trackedTaskAt(i);
+            (, , uint96 escrowBalance, , bool escrowed, bool settled) = pool.tasks(taskId);
+            if (escrowed && !settled) {
+                trackedLiability += uint256(escrowBalance);
+            }
+        }
+        assertEq(pool.totalTaskEscrowLiability(), trackedLiability);
     }
 
     function testFuzz_TaskEscrowRequiresRealTransferDelta(uint96 receivable) public {

@@ -69,6 +69,7 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
     uint256 public reservedIntentCredit;
     uint256 public totalOutstandingPrincipal;
     uint256 public totalSponsorCollateral;
+    uint256 public totalTaskEscrowLiability;
 
     bytes32 private constant _SOCIAL_VERIFICATION_TYPEHASH = keccak256(
         "SocialVerification(address subject,address verifier,bytes32 action,uint256 chainId,address contractAddress,uint256 nonce,uint256 deadline,bytes32 payloadHash)"
@@ -206,6 +207,8 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
     event TaskSettled(uint256 indexed taskId, uint256 amount);
     event TaskEscrowFunded(uint256 indexed taskId, uint256 amount);
     event TaskEscrowReleased(uint256 indexed taskId, uint256 toPool, uint256 toAgent);
+    event TaskEscrowed(uint256 indexed taskId, address indexed payer, uint256 amount, uint256 totalTaskEscrowLiability);
+    event TaskEscrowLiabilityReleased(uint256 indexed taskId, uint256 escrowReleased, uint256 totalTaskEscrowLiability);
     event SocialVerified(address indexed subject, address indexed verifier, bytes32 payloadHash, uint256 nonce);
     event AttestationSubmitted(address indexed agent, address indexed attestor, uint256 scoreBps, uint256 confidenceBps, bytes32 evidence);
     event PassportUpdated(address indexed agent, uint256 indexed sourceChainId, uint256 scoreBps, uint256 confidenceBps, uint256 nonce);
@@ -234,6 +237,7 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
     error BorrowCapExceeded();
     error DelegationUnavailable();
     error TaskUnavailable();
+    error TaskAlreadyLinked();
     error UnauthorizedIntent();
     error UnsupportedTenor();
     error IsolationRestricted();
@@ -477,6 +481,7 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
             uint256 balAfter = usdc.balanceOf(address(this));
             escrowBalance = balAfter - balBefore;
             if (escrowBalance == 0) revert InvalidAmount();
+            totalTaskEscrowLiability += escrowBalance;
         }
 
         taskId = nextTaskId++;
@@ -490,7 +495,10 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
             settled: false
         });
 
-        if (escrowed) emit TaskEscrowFunded(taskId, escrowBalance);
+        if (escrowed) {
+            emit TaskEscrowFunded(taskId, escrowBalance);
+            emit TaskEscrowed(taskId, msg.sender, escrowBalance, totalTaskEscrowLiability);
+        }
         emit TaskCreated(taskId, msg.sender, receivable, dueDate, escrowed);
     }
 
@@ -530,17 +538,24 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
         emit SocialVerified(subject, verifier, payloadHash, nonce);
     }
 
-    function settleTask(uint256 taskId, uint256 amount) external whenNotPaused {
+    function settleTask(uint256 taskId, uint256 amount) external nonReentrant whenNotPaused {
         TaskReceivable storage task = tasks[taskId];
         if (task.agent == address(0) || task.settled) revert TaskUnavailable();
         if (msg.sender != task.agent && !hasRole(EARNINGS_HOOK_ROLE, msg.sender)) revert DelegationUnavailable();
+
+        task.settled = true;
+        uint256 escrow = task.escrowBalance;
+        if (escrow > 0) {
+            task.escrowBalance = 0;
+            totalTaskEscrowLiability -= escrow;
+            emit TaskEscrowLiabilityReleased(taskId, escrow, totalTaskEscrowLiability);
+        }
 
         if (amount > 0) {
             usdc.safeTransferFrom(msg.sender, address(this), amount);
         }
 
-        (uint256 toPool, uint256 toAgent) = _repayTaskLinkedLoan(taskId, amount, task.agent);
-        task.settled = true;
+        (uint256 toPool, uint256 toAgent) = _repayTaskLinkedLoan(taskId, amount + escrow, task.agent);
         emit TaskEscrowReleased(taskId, toPool, toAgent);
         emit TaskSettled(taskId, toPool + toAgent);
     }
@@ -553,6 +568,8 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
         task.settled = true;
         uint256 escrow = task.escrowBalance;
         task.escrowBalance = 0;
+        totalTaskEscrowLiability -= escrow;
+        emit TaskEscrowLiabilityReleased(taskId, escrow, totalTaskEscrowLiability);
 
         (uint256 toPool, uint256 toAgent) = _repayTaskLinkedLoan(taskId, escrow, task.agent);
 
@@ -790,6 +807,7 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
 
         TaskReceivable memory task = tasks[taskId];
         if (task.agent != msg.sender || task.settled || !task.escrowed) revert TaskUnavailable();
+        if (taskLoan[taskId] != 0) revert TaskAlreadyLinked();
         if (task.escrowBalance == 0) revert TaskUnavailable();
         if (task.dueDate < block.timestamp + tenorDays * 1 days) revert TaskUnavailable();
         uint256 maxBorrow = (uint256(task.escrowBalance) * taskEscrowHaircutBps) / BPS;
@@ -1573,7 +1591,7 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
         uint256 trancheLiabilities = _totalTrancheLiabilities();
         uint256 liabilities =
             protocolFees + insurancePool + reinsurancePool + reservedIntentCredit + totalSponsorCollateral
-                + trancheLiabilities;
+                + trancheLiabilities + totalTaskEscrowLiability;
         uint256 available = bal > liabilities ? bal - liabilities : 0;
         if (amountOut > available) revert InsufficientLiquidity();
     }

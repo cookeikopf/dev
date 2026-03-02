@@ -127,6 +127,49 @@ contract ClawCreditAgentStandardV3Test is Test {
         pool.openTaskBackedLoan(taskId, 50e6, 10, underwriterId, keccak256("intent"), c);
     }
 
+    function test_TaskCannotBeLinkedTwice() public {
+        vm.prank(agent);
+        uint256 taskId = pool.createTaskReceivable(200e6, uint40(block.timestamp + 20 days), keccak256("esc"), true);
+
+        ClawCreditAgentStandardV3.Covenant memory c;
+        vm.prank(agent);
+        pool.openTaskBackedLoan(taskId, 50e6, 10, underwriterId, keccak256("intent-1"), c);
+
+        vm.prank(agent);
+        vm.expectRevert(ClawCreditAgentStandardV3.TaskAlreadyLinked.selector);
+        pool.openTaskBackedLoan(taskId, 50e6, 10, underwriterId, keccak256("intent-2"), c);
+    }
+
+    function test_TaskSettledCannotBeLinkedAgain() public {
+        vm.prank(agent);
+        uint256 taskId = pool.createTaskReceivable(120e6, uint40(block.timestamp + 20 days), keccak256("esc2"), true);
+
+        vm.prank(agent);
+        pool.releaseTaskPayment(taskId);
+
+        ClawCreditAgentStandardV3.Covenant memory c;
+        vm.prank(agent);
+        vm.expectRevert(ClawCreditAgentStandardV3.TaskUnavailable.selector);
+        pool.openTaskBackedLoan(taskId, 50e6, 10, underwriterId, keccak256("intent"), c);
+    }
+
+    function test_EscrowLiabilityBlocksOverWithdrawUntilReleased() public {
+        vm.prank(agent);
+        uint256 taskId = pool.createTaskReceivable(100e6, uint40(block.timestamp + 20 days), keccak256("esc-liab"), true);
+
+        assertEq(pool.totalTaskEscrowLiability(), 100e6);
+
+        vm.startPrank(lender);
+        vm.expectRevert(ClawCreditAgentStandardV3.InsufficientLiquidity.selector);
+        pool.withdrawTranche(pool.TRANCHE_SENIOR(), 200_000e6);
+        vm.stopPrank();
+
+        vm.prank(agent);
+        pool.releaseTaskPayment(taskId);
+
+        assertEq(pool.totalTaskEscrowLiability(), 0);
+    }
+
     function test_VerifySocialAccountRequiresValidEIP712Sig_NoOriginBypass() public {
         bytes32 action = keccak256("social:twitter");
         bytes32 payload = keccak256("@agent");
