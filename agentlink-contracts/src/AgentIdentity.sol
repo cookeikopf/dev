@@ -205,7 +205,8 @@ contract AgentIdentity is
         string memory _symbol,
         string memory _baseURI,
         address _initialOwner
-    ) ERC721(_name, _symbol) Ownable(_initialOwner) {
+    ) ERC721(_name, _symbol) {
+        _transferOwnership(_initialOwner);
         _baseTokenURI = _baseURI;
         publicMintingEnabled = false;
         mintFee = 0;
@@ -587,7 +588,7 @@ contract AgentIdentity is
      * @param tokenId ID of the token
      * @return exists Whether the token exists
      */
-    function _exists(uint256 tokenId) internal view returns (bool exists) {
+    function _exists(uint256 tokenId) internal view override returns (bool exists) {
         return _ownerOf(tokenId) != address(0);
     }
 

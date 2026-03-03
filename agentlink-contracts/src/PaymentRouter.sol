@@ -171,7 +171,8 @@ contract PaymentRouter is Ownable2Step, ReentrancyGuard, Pausable {
         address _treasury,
         uint256 _feeBps,
         address _initialOwner
-    ) Ownable(_initialOwner) {
+    ) {
+        _transferOwnership(_initialOwner);
         if (_usdc == address(0)) revert InvalidReceiver(_usdc);
         if (_treasury == address(0)) revert InvalidTreasury(_treasury);
         if (_feeBps > MAX_FEE_BPS) revert FeeExceedsMaximum(_feeBps, MAX_FEE_BPS);
