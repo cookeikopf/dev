@@ -1101,7 +1101,7 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
 
     function setOracles(address newUsdcFeed, address newAiFeed, uint256 newHeartbeat)
         external
-        onlyRole(RISK_MANAGER_ROLE)
+        onlyRole(ORACLE_MANAGER_ROLE)
     {
         if (newUsdcFeed == address(0) || newAiFeed == address(0) || newHeartbeat == 0 || newHeartbeat > 24 hours) {
             revert InvalidAmount();
@@ -1556,9 +1556,9 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
             + totalSponsorCollateral + trancheLiabilities + totalTaskEscrowLiability;
         uint256 available = bal > liabilities ? bal - liabilities : 0;
         
-        // Strikte Prüfung: Bei Escrow-Liability keine Entnahmen erlauben
-        // (außer für Task-Settlement-Zwecke)
-        if (totalTaskEscrowLiability > 0 && amountOut > 0) {
+        // FIXED: Check if requested amount is covered by available liquidity
+        // instead of blocking all withdrawals when escrow exists
+        if (amountOut > available) {
             revert InsufficientLiquidity();
         }
     }

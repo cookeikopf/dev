@@ -58,13 +58,15 @@ contract DeployMainnet is Script {
         console2.log("3. TimelockController:", address(timelock));
         
         // 4. Deploy ClawCredit
+        // Constructor: admin, guardian, treasury, usdcToken, reputation, usdcFeed, aiFeed
         ClawCreditAgentStandardV3 clawCredit = new ClawCreditAgentStandardV3(
-            USDC,
-            USDC_PRICE_FEED,
-            address(reputation),
-            address(aiOracle),
-            address(timelock),
-            deployer
+            address(timelock),  // admin (timelock)
+            deployer,           // guardian
+            deployer,           // treasury
+            USDC,               // usdcToken
+            address(reputation),// reputation
+            USDC_PRICE_FEED,    // usdcFeed
+            address(aiOracle)   // aiFeed
         );
         console2.log("4. ClawCreditAgentStandardV3:", address(clawCredit));
         
