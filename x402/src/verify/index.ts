@@ -407,9 +407,10 @@ export function buildPaymentRouterCallData(
   })).toString('hex')}` as `0x${string}`;
 }
 
-// ============================================================================
-// Factory Functions
-// ============================================================================
+import { PersistentReceiptStore } from './persistent-store';
+
+// Export persistent store as default for production
+export { PersistentReceiptStore };
 
 /**
  * Create a payment processor from config
