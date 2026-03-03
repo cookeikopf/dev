@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClawCredit Admin Dashboard</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0e27;
+            color: #fff;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #1a1f3a;
+        }
+        .header h1 {
+            font-size: 28px;
+            background: linear-gradient(90deg, #00d4aa, #00a8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .status-healthy { background: #00d4aa33; color: #00d4aa; }
+        .status-warning { background: #ffd70033; color: #ffd700; }
+        .status-danger { background: #ff475733; color: #ff4757; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: #111633;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #1a1f3a;
+        }
+        .card h3 {
+            font-size: 14px;
+            color: #8b92b9;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .card .subvalue {
+            font-size: 14px;
+            color: #8b92b9;
+            margin-top: 8px;
+        }
+        .positive { color: #00d4aa; }
+        .negative { color: #ff4757; }
+        
+        .section {
+            background: #111633;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #1a1f3a;
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #1a1f3a;
+        }
+        th {
+            color: #8b92b9;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        td {
+            font-size: 14px;
+        }
+        tr:hover { background: #1a1f3a; }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #00d4aa, #00a8ff);
+            color: #fff;
+        }
+        .btn-danger {
+            background: #ff4757;
+            color: #fff;
+        }
+        .btn-warning {
+            background: #ffd700;
+            color: #000;
+        }
+        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        input, select {
+            flex: 1;
+            padding: 10px 14px;
+            background: #0a0e27;
+            border: 1px solid #1a1f3a;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #00d4aa;
+        }
+        
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .alert-warning {
+            background: #ffd70022;
+            border: 1px solid #ffd70044;
+            color: #ffd700;
+        }
+        .alert-danger {
+            background: #ff475722;
+            border: 1px solid #ff475744;
+            color: #ff4757;
+        }
+        
+        .hidden { display: none; }
+        
+        #connectWallet {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #0a0e27ee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .connect-box {
+            background: #111633;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid #1a1f3a;
+        }
+        .connect-box h2 {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="connectWallet">
+        <div class="connect-box">
+            <h2>🔐 Admin Access Required</h2>
+            <p style="color: #8b92b9; margin-bottom: 20px;">Connect your wallet to access the admin dashboard</p>
+            <button class="btn btn-primary" onclick="connectWallet()">Connect Wallet</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>⚡ ClawCredit Admin</h1>
+            <span id="poolStatus" class="status-badge status-healthy">Pool Healthy</span>
+        </div>
+
+        <div id="alerts"></div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Total Liquidity</h3>
+                <div class="value" id="totalLiquidity">$0</div>
+                <div class="subvalue">Available for loans</div>
+            </div>
+            <div class="card">
+                <h3>Outstanding Loans</h3>
+                <div class="value" id="outstandingLoans">$0</div>
+                <div class="subvalue" id="loanCount">0 active loans</div>
+            </div>
+            <div class="card">
+                <h3>Insurance Pool</h3>
+                <div class="value" id="insurancePool">$0</div>
+                <div class="subvalue">Default protection</div>
+            </div>
+            <div class="card">
+                <h3>Protocol Fees</h3>
+                <div class="value" id="protocolFees">$0</div>
+                <div class="subvalue positive" id="feeGrowth">+0% this week</div>
+            </div>
+            <div class="card">
+                <h3>Default Rate</h3>
+                <div class="value" id="defaultRate">0%</div>
+                <div class="subvalue" id="defaultStatus">Healthy</div>
+            </div>
+            <div class="card">
+                <h3>Active Agents</h3>
+                <div class="value" id="activeAgents">0</div>
+                <div class="subvalue">With open loans</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🚨 Emergency Controls</h2>
+            <div class="actions">
+                <button class="btn btn-danger" onclick="pausePool()">⏸️ Pause Pool</button>
+                <button class="btn btn-warning" onclick="isolationMode()">🔒 Isolation Mode</button>
+                <button class="btn btn-primary" onclick="updateFees()">💰 Update Fees</button>
+                <button class="btn btn-primary" onclick="withdrawFees()">🏦 Withdraw Fees</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Pool Configuration</h2>
+            <div class="input-group">
+                <input type="number" id="originationFee" placeholder="Origination Fee (BPS)" value="300">
+                <input type="number" id="insuranceFee" placeholder="Insurance Fee (BPS)" value="500">
+                <input type="number" id="protocolFee" placeholder="Protocol Fee (BPS)" value="1000">
+                <button class="btn btn-primary" onclick="updatePoolConfig()">Update</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>👥 Recent Loans</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Loan ID</th>
+                        <th>Agent</th>
+                        <th>Amount</th>
+                        <th>Collateral</th>
+                        <th>APR</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="loansTable">
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #8b92b9;">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>🔍 Agent Lookup</h2>
+            <div class="input-group">
+                <input type="text" id="agentAddress" placeholder="Agent Address (0x...)">
+                <button class="btn btn-primary" onclick="lookupAgent()">Search</button>
+            </div>
+            <div id="agentInfo"></div>
+        </div>
+
+        <div class="section">
+            <h2>📈 System Health</h2>
+            <div class="grid" style="margin-top: 15px;">
+                <div class="card">
+                    <h3>Gas Price</h3>
+                    <div class="value" id="gasPrice">0</div>
+                    <div class="subvalue">Gwei</div>
+                </div>
+                <div class="card">
+                    <h3>Block Number</h3>
+                    <div class="value" id="blockNumber">0</div>
+                    <div class="subvalue">Latest</div>
+                </div>
+                <div class="card">
+                    <h3>Network</h3>
+                    <div class="value" style="font-size: 20px;">Base</div>
+                    <div class="subvalue">Mainnet</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            base: {
+                rpc: 'https://mainnet.base.org',
+                chainId: 8453,
+                pool: '0x2673ad529c33516198Cb49FaBD86C49DC90EE8FF', // Update after deploy
+                usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
+            }
+        };
+
+        let provider, signer, pool;
+
+        // Minimal ABI for admin functions
+        const POOL_ABI = [
+            "function totalShares() view returns (uint256)",
+            "function totalOutstandingPrincipal() view returns (uint256)",
+            "function insurancePool() view returns (uint256)",
+            "function protocolFees() view returns (uint256)",
+            "function availableLiquidity() view returns (uint256)",
+            "function loans(uint256) view returns (tuple(address,uint96,uint96,uint96,uint96,uint96,uint40,uint40,uint40,uint16,uint16,uint8,bool,bool))",
+            "function agents(address) view returns (tuple(uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bytes32))",
+            "function tiers(uint8) view returns (uint256,uint256,uint256,uint256,uint256,bool)",
+            "function setIsolationMode(bool) external",
+            "function pause() external",
+            "function unpause() external",
+            "function withdrawProtocolFees(address,uint256) external",
+            "event LoanIssued(uint256 indexed,address indexed,uint256,uint8)",
+            "event LoanRepaid(uint256 indexed,uint256,uint256)"
+        ];
+
+        async function connectWallet() {
+            if (!window.ethereum) {
+                alert('Please install MetaMask');
+                return;
+            }
+
+            try {
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+                
+                const network = await provider.getNetwork();
+                if (network.chainId !== CONFIG.base.chainId) {
+                    alert('Please switch to Base Mainnet');
+                    return;
+                }
+
+                pool = new ethers.Contract(CONFIG.base.pool, POOL_ABI, signer);
+                
+                document.getElementById('connectWallet').classList.add('hidden');
+                startMonitoring();
+            } catch (err) {
+                console.error('Connection error:', err);
+                alert('Failed to connect wallet');
+            }
+        }
+
+        async function startMonitoring() {
+            await updateMetrics();
+            setInterval(updateMetrics, 10000); // Update every 10 seconds
+        }
+
+        async function updateMetrics() {
+            try {
+                const [liquidity, outstanding, insurance, fees, blockNum, gasPrice] = await Promise.all([
+                    pool.availableLiquidity(),
+                    pool.totalOutstandingPrincipal(),
+                    pool.insurancePool(),
+                    pool.protocolFees(),
+                    provider.getBlockNumber(),
+                    provider.getGasPrice()
+                ]);
+
+                const decimals = 6; // USDC
+                
+                document.getElementById('totalLiquidity').textContent = formatCurrency(liquidity, decimals);
+                document.getElementById('outstandingLoans').textContent = formatCurrency(outstanding, decimals);
+                document.getElementById('insurancePool').textContent = formatCurrency(insurance, decimals);
+                document.getElementById('protocolFees').textContent = formatCurrency(fees, decimals);
+                document.getElementById('blockNumber').textContent = blockNum.toLocaleString();
+                document.getElementById('gasPrice').textContent = Math.round(gasPrice / 1e9);
+
+                // Check alerts
+                checkAlerts(liquidity, outstanding, insurance, fees);
+                
+            } catch (err) {
+                console.error('Update error:', err);
+            }
+        }
+
+        function checkAlerts(liquidity, outstanding, insurance, fees) {
+            const alerts = document.getElementById('alerts');
+            alerts.innerHTML = '';
+            
+            const minLiquidity = ethers.utils.parseUnits('50', 6);
+            if (liquidity.lt(minLiquidity)) {
+                alerts.innerHTML += `
+                    <div class="alert alert-danger">
+                        <strong>🚨 Low Liquidity:</strong> Only $${formatUnits(liquidity, 6)} available. Consider adding more USDC to the pool.
+                    </div>
+                `;
+            }
+            
+            if (fees.gt(ethers.utils.parseUnits('1000', 6))) {
+                alerts.innerHTML += `
+                    <div class="alert alert-warning">
+                        <strong>💰 High Fees:</strong> $${formatUnits(fees, 6)} ready to withdraw to treasury.
+                    </div>
+                `;
+            }
+        }
+
+        function formatCurrency(value, decimals) {
+            const num = parseFloat(ethers.utils.formatUnits(value, decimals));
+            return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatUnits(value, decimals) {
+            return parseFloat(ethers.utils.formatUnits(value, decimals)).toFixed(2);
+        }
+
+        // Emergency functions
+        async function pausePool() {
+            if (!confirm('Are you sure you want to PAUSE the pool? This will prevent new loans.')) return;
+            try {
+                const tx = await pool.pause();
+                await tx.wait();
+                alert('Pool paused successfully');
+                updateMetrics();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function isolationMode() {
+            if (!confirm('Enable isolation mode? Only whitelisted agents can borrow.')) return;
+            try {
+                const tx = await pool.setIsolationMode(true);
+                await tx.wait();
+                alert('Isolation mode enabled');
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function updateFees() {
+            alert('Fee update interface - implement based on contract functions');
+        }
+
+        async function withdrawFees() {
+            const amount = prompt('Enter amount to withdraw (in USDC):');
+            if (!amount) return;
+            
+            try {
+                const parsed = ethers.utils.parseUnits(amount, 6);
+                const tx = await pool.withdrawProtocolFees(await signer.getAddress(), parsed);
+                await tx.wait();
+                alert('Fees withdrawn successfully');
+                updateMetrics();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function updatePoolConfig() {
+            alert('Pool config update - implement multi-sig or timelock for production');
+        }
+
+        async function lookupAgent() {
+            const address = document.getElementById('agentAddress').value;
+            if (!ethers.utils.isAddress(address)) {
+                alert('Invalid address');
+                return;
+            }
+            
+            try {
+                const agent = await pool.agents(address);
+                const info = document.getElementById('agentInfo');
+                info.innerHTML = `
+                    <div class="card" style="margin-top: 15px;">
+                        <h3>Agent: ${address.slice(0, 6)}...${address.slice(-4)}</h3>
+                        <p><strong>Staked Collateral:</strong> $${formatUnits(agent[0], 6)}</p>
+                        <p><strong>Total Borrowed:</strong> $${formatUnits(agent[3], 6)}</p>
+                        <p><strong>Total Repaid:</strong> $${formatUnits(agent[4], 6)}</p>
+                        <p><strong>Consecutive Repayments:</strong> ${agent[6].toString()}</p>
+                        <p><strong>Social Verified:</strong> ${agent[7] ? '✅' : '❌'}</p>
+                    </div>
+                `;
+            } catch (err) {
+                alert('Error looking up agent: ' + err.message);
+            }
+        }
+
+        // Initialize
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', () => location.reload());
+            window.ethereum.on('chainChanged', () => location.reload());
+        }
+    </script>
+</body>
+</html>
