@@ -1,0 +1,11 @@
+node_modules
+dist
+build
+.next
+out
+contracts/cache
+contracts/out
+contracts/lib
+pnpm-lock.yaml
+*.min.js
+*.min.css

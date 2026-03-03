@@ -1,0 +1,61 @@
+{
+  "$schema": "https://agentlink.dev/schemas/agent-card.json",
+  "name": "Paid Research Agent",
+  "description": "An autonomous agent that conducts research on any topic and provides comprehensive summaries. Payment required via x402 protocol.",
+  "url": "https://research-agent.example.com",
+  "version": "1.0.0",
+  "authentication": {
+    "schemes": ["Bearer"]
+  },
+  "defaultInputModes": ["text"],
+  "defaultOutputModes": ["text", "json"],
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false
+  },
+  "skills": [
+    {
+      "id": "research-topic",
+      "name": "Research Topic",
+      "description": "Conduct comprehensive research on a given topic and provide a detailed summary",
+      "tags": ["research", "summary", "analysis"],
+      "examples": [
+        "Research the latest developments in quantum computing",
+        "Summarize the current state of renewable energy adoption"
+      ],
+      "inputModes": ["text"],
+      "outputModes": ["text", "json"]
+    },
+    {
+      "id": "analyze-data",
+      "name": "Analyze Data",
+      "description": "Analyze provided data and extract key insights",
+      "tags": ["analysis", "data", "insights"],
+      "examples": [
+        "Analyze this dataset and find trends",
+        "What insights can you extract from this information?"
+      ],
+      "inputModes": ["text", "file"],
+      "outputModes": ["text", "json"]
+    }
+  ],
+  "pricing": {
+    "currency": "USDC",
+    "network": "base-sepolia",
+    "rates": {
+      "research-topic": {
+        "amount": "1000000",
+        "decimals": 6,
+        "description": "1 USDC per research request"
+      },
+      "analyze-data": {
+        "amount": "500000",
+        "decimals": 6,
+        "description": "0.5 USDC per analysis request"
+      }
+    }
+  },
+  "telemetry": {
+    "endpoint": "https://dashboard.agentlink.dev/api/telemetry"
+  }
+}

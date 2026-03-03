@@ -1,0 +1,264 @@
+name: Contract Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      network:
+        description: 'Network to deploy to'
+        required: true
+        default: 'base-sepolia'
+        type: choice
+        options:
+          - base-sepolia
+          - base-mainnet
+      verify:
+        description: 'Verify contracts on Etherscan'
+        required: true
+        default: true
+        type: boolean
+      dry_run:
+        description: 'Dry run (simulate only)'
+        required: true
+        default: false
+        type: boolean
+
+concurrency:
+  group: contract-deploy-${{ github.event.inputs.network }}
+  cancel-in-progress: false
+
+env:
+  FOUNDRY_VERSION: 'nightly'
+
+jobs:
+  # ==========================================
+  # Job: Validate Environment
+  # ==========================================
+  validate:
+    name: Validate Environment
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.network == 'base-mainnet' && 'production' || 'staging' }}
+    steps:
+      - name: Validate inputs
+        run: |
+          echo "Network: ${{ github.event.inputs.network }}"
+          echo "Verify: ${{ github.event.inputs.verify }}"
+          echo "Dry Run: ${{ github.event.inputs.dry_run }}"
+
+      - name: Check secrets
+        run: |
+          if [ -z "${{ secrets.PRIVATE_KEY }}" ]; then
+            echo "Error: PRIVATE_KEY not set"
+            exit 1
+          fi
+          
+          if [ "${{ github.event.inputs.network }}" == "base-sepolia" ] && [ -z "${{ secrets.BASE_SEPOLIA_RPC_URL }}" ]; then
+            echo "Error: BASE_SEPOLIA_RPC_URL not set"
+            exit 1
+          fi
+          
+          if [ "${{ github.event.inputs.network }}" == "base-mainnet" ] && [ -z "${{ secrets.BASE_MAINNET_RPC_URL }}" ]; then
+            echo "Error: BASE_MAINNET_RPC_URL not set"
+            exit 1
+          fi
+          
+          echo "✅ All required secrets are configured"
+
+  # ==========================================
+  # Job: Run Tests
+  # ==========================================
+  test:
+    name: Contract Tests
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: ${{ env.FOUNDRY_VERSION }}
+
+      - name: Run tests
+        run: |
+          cd packages/contracts
+          forge test -vvv
+
+  # ==========================================
+  # Job: Deploy Contracts
+  # ==========================================
+  deploy:
+    name: Deploy Contracts
+    runs-on: ubuntu-latest
+    needs: [validate, test]
+    environment: ${{ github.event.inputs.network == 'base-mainnet' && 'production' || 'staging' }}
+    outputs:
+      deployment_file: ${{ steps.deploy.outputs.deployment_file }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: ${{ env.FOUNDRY_VERSION }}
+
+      - name: Set environment variables
+        run: |
+          if [ "${{ github.event.inputs.network }}" == "base-sepolia" ]; then
+            echo "RPC_URL=${{ secrets.BASE_SEPOLIA_RPC_URL }}" >> $GITHUB_ENV
+            echo "CHAIN_ID=84532" >> $GITHUB_ENV
+          else
+            echo "RPC_URL=${{ secrets.BASE_MAINNET_RPC_URL }}" >> $GITHUB_ENV
+            echo "CHAIN_ID=8453" >> $GITHUB_ENV
+          fi
+
+      - name: Build contracts
+        run: |
+          cd packages/contracts
+          forge build --sizes
+
+      - name: Deploy contracts
+        id: deploy
+        run: |
+          cd packages/contracts
+          
+          # Set broadcast flag
+          BROADCAST_FLAG=""
+          if [ "${{ github.event.inputs.dry_run }}" == "false" ]; then
+            BROADCAST_FLAG="--broadcast"
+          fi
+          
+          # Set verify flag
+          VERIFY_FLAG=""
+          if [ "${{ github.event.inputs.verify }}" == "true" ] && [ -n "${{ secrets.ETHERSCAN_API_KEY }}" ]; then
+            VERIFY_FLAG="--verify"
+          fi
+          
+          # Run deployment
+          forge script script/Deploy.s.sol:Deploy \
+            --rpc-url $RPC_URL \
+            $BROADCAST_FLAG \
+            $VERIFY_FLAG \
+            --slow \
+            -vvvv
+          
+          # Find deployment file
+          DEPLOYMENT_FILE=$(ls -t deployments/${CHAIN_ID}_*.json 2>/dev/null | head -1)
+          if [ -n "$DEPLOYMENT_FILE" ]; then
+            echo "deployment_file=$DEPLOYMENT_FILE" >> $GITHUB_OUTPUT
+          fi
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+
+      - name: Upload deployment artifacts
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-deployment-${{ github.event.inputs.network }}
+          path: |
+            packages/contracts/deployments/
+            packages/contracts/broadcast/
+          retention-days: 30
+
+      - name: Parse deployment output
+        if: ${{ github.event.inputs.dry_run == 'false' && steps.deploy.outputs.deployment_file != '' }}
+        id: parse
+        run: |
+          DEPLOYMENT_FILE="packages/contracts/${{ steps.deploy.outputs.deployment_file }}"
+          if [ -f "$DEPLOYMENT_FILE" ]; then
+            echo "## Contract Deployment Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Contract | Address |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|---------|" >> $GITHUB_STEP_SUMMARY
+            
+            # Parse JSON and output addresses
+            ADDRESSES=$(cat $DEPLOYMENT_FILE | jq -r '.contracts | to_entries | .[] | "| \(.key) | `\(.value)` |"')
+            echo "$ADDRESSES" >> $GITHUB_STEP_SUMMARY
+            
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Network:** ${{ github.event.inputs.network }}" >> $GITHUB_STEP_SUMMARY
+            echo "**Chain ID:** $CHAIN_ID" >> $GITHUB_STEP_SUMMARY
+            echo "**Explorer:** https://${{ github.event.inputs.network == 'base-sepolia' && 'sepolia.' || '' }}basescan.org" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ==========================================
+  # Job: Update Contract Addresses
+  # ==========================================
+  update-addresses:
+    name: Update Contract Addresses
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: ${{ github.event.inputs.dry_run == 'false' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download deployment artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: contract-deployment-${{ github.event.inputs.network }}
+          path: packages/contracts/
+
+      - name: Update environment files
+        run: |
+          DEPLOYMENT_FILE=$(ls -t packages/contracts/deployments/${{ env.CHAIN_ID }}_*.json 2>/dev/null | head -1)
+          
+          if [ -f "$DEPLOYMENT_FILE" ]; then
+            # Extract addresses
+            AGENT_REGISTRY=$(cat $DEPLOYMENT_FILE | jq -r '.contracts.AgentRegistry')
+            TASK_MANAGER=$(cat $DEPLOYMENT_FILE | jq -r '.contracts.TaskManager')
+            REPUTATION_SYSTEM=$(cat $DEPLOYMENT_FILE | jq -r '.contracts.ReputationSystem')
+            AGENT_LINK=$(cat $DEPLOYMENT_FILE | jq -r '.contracts.AgentLink')
+            
+            # Update .env.example
+            sed -i "s/AGENT_REGISTRY_ADDRESS=.*/AGENT_REGISTRY_ADDRESS=$AGENT_REGISTRY/" .env.example
+            sed -i "s/TASK_MANAGER_ADDRESS=.*/TASK_MANAGER_ADDRESS=$TASK_MANAGER/" .env.example
+            sed -i "s/REPUTATION_SYSTEM_ADDRESS=.*/REPUTATION_SYSTEM_ADDRESS=$REPUTATION_SYSTEM/" .env.example
+            sed -i "s/AGENT_LINK_ADDRESS=.*/AGENT_LINK_ADDRESS=$AGENT_LINK/" .env.example
+            
+            echo "Updated .env.example with new contract addresses"
+          fi
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add .env.example
+          git add packages/contracts/deployments/
+          
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(contracts): update contract addresses for ${{ github.event.inputs.network }}"
+            git push origin HEAD:main
+          fi
+
+  # ==========================================
+  # Job: Notify
+  # ==========================================
+  notify:
+    name: Notify Team
+    runs-on: ubuntu-latest
+    needs: [deploy, update-addresses]
+    if: always()
+    steps:
+      - name: Slack notification
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          text: |
+            Contract deployment to ${{ github.event.inputs.network }} ${{ job.status == 'success' && 'completed! ✅' || 'failed! ❌' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,0 +1,52 @@
+{
+  "name": "agentlink-mvp",
+  "version": "1.0.0",
+  "description": "AgentLink MVP - Build and deploy AI agents with AgentLink",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
+    
+    "test": "pnpm test:unit && pnpm test:integration && pnpm test:contracts",
+    "test:unit": "pnpm --filter @agentlink/core test && pnpm --filter @agentlink/a2a test && pnpm --filter @agentlink/cli test",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:contracts": "cd agentlink-contracts && forge test",
+    "test:e2e": "playwright test",
+    "test:coverage": "pnpm -r test:coverage",
+    "test:watch": "vitest",
+    
+    "dev": "pnpm -r dev",
+    "clean": "pnpm -r clean && rm -rf node_modules",
+    
+    "contract:build": "cd agentlink-contracts && forge build",
+    "contract:test": "cd agentlink-contracts && forge test",
+    "contract:test:gas": "cd agentlink-contracts && forge test --gas-report",
+    "contract:coverage": "cd agentlink-contracts && forge coverage",
+    "contract:deploy:local": "cd agentlink-contracts && forge script script/DeployAgentIdentity.s.sol --rpc-url http://localhost:8545 --broadcast",
+    
+    "playwright:install": "playwright install",
+    "playwright:ui": "playwright test --ui",
+    "playwright:debug": "playwright test --debug",
+    "playwright:codegen": "playwright codegen"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.12.0",
+  "workspaces": [
+    "agentlink-core",
+    "a2a-protocol",
+    "agentlink-cli",
+    "dashboard"
+  ]
+}

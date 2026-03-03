@@ -1,0 +1,81 @@
+{
+  "name": "@agentlink/a2a-protocol",
+  "version": "1.0.0",
+  "description": "AgentLink A2A Protocol Implementation - Agent-to-Agent protocol following Google's A2A specification",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./schemas": {
+      "import": "./dist/schemas.js",
+      "types": "./dist/schemas.d.ts"
+    },
+    "./agent-card": {
+      "import": "./dist/agent-card.js",
+      "types": "./dist/agent-card.d.ts"
+    },
+    "./jsonrpc-handler": {
+      "import": "./dist/jsonrpc-handler.js",
+      "types": "./dist/jsonrpc-handler.d.ts"
+    },
+    "./sse-stream": {
+      "import": "./dist/sse-stream.js",
+      "types": "./dist/sse-stream.d.ts"
+    },
+    "./server": {
+      "import": "./dist/server.js",
+      "types": "./dist/server.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src tests --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "a2a",
+    "agent-to-agent",
+    "protocol",
+    "agents",
+    "ai",
+    "json-rpc",
+    "sse",
+    "streaming",
+    "agentlink"
+  ],
+  "author": "AgentLink Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentlink/agentlink-mvp.git",
+    "directory": "a2a-protocol"
+  },
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "eslint": "^8.55.0",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}

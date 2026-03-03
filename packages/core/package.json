@@ -1,0 +1,87 @@
+{
+  "name": "@agentlink/core",
+  "version": "0.1.0",
+  "description": "AgentLink Core SDK - Build autonomous agent applications",
+  "keywords": [
+    "agent",
+    "a2a",
+    "x402",
+    "payments",
+    "autonomous",
+    "ai",
+    "protocol"
+  ],
+  "homepage": "https://agentlink.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentlink/agentlink-mvp.git",
+    "directory": "packages/core"
+  },
+  "license": "MIT",
+  "author": "AgentLink Team",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./a2a": {
+      "types": "./dist/a2a/index.d.ts",
+      "import": "./dist/a2a/index.js"
+    },
+    "./x402": {
+      "types": "./dist/x402/index.d.ts",
+      "import": "./dist/x402/index.js"
+    },
+    "./telemetry": {
+      "types": "./dist/telemetry/index.d.ts",
+      "import": "./dist/telemetry/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src tests",
+    "lint:fix": "eslint src tests --fix",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "uuid": "^9.0.1",
+    "viem": "^2.7.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/uuid": "^9.0.7",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "@vitest/coverage-v8": "^1.2.0",
+    "eslint": "^8.56.0",
+    "msw": "^2.1.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

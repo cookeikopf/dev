@@ -1,0 +1,97 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    "**/.env.*local",
+    "**/.env",
+    "tsconfig.json"
+  ],
+  "globalEnv": [
+    "NODE_ENV",
+    "NEXT_PUBLIC_APP_ENV",
+    "NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "BASE_SEPOLIA_RPC_URL",
+    "PRIVATE_KEY"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**",
+        "out/**",
+        "artifacts/**",
+        "cache/**"
+      ],
+      "env": [
+        "NEXT_PUBLIC_APP_ENV",
+        "NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID",
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "FOUNDRY_FUZZ_RUNS"
+      ]
+    },
+    "build:deps": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "env": [
+        "NEXT_PUBLIC_APP_ENV",
+        "NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID",
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+      ]
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "lint:fix": {
+      "cache": false
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "env": [
+        "VITEST_ENV",
+        "ANVIL_RPC_URL"
+      ]
+    },
+    "test:unit": {
+      "dependsOn": ["build:deps"],
+      "outputs": ["coverage/**"]
+    },
+    "test:integration": {
+      "dependsOn": ["build"],
+      "env": [
+        "ANVIL_RPC_URL",
+        "BASE_SEPOLIA_RPC_URL"
+      ]
+    },
+    "test:e2e": {
+      "dependsOn": ["build"],
+      "env": [
+        "PLAYWRIGHT_TEST_BASE_URL"
+      ]
+    },
+    "clean": {
+      "cache": false
+    },
+    "//#format": {
+      "cache": false
+    },
+    "//#format:check": {
+      "outputs": []
+    }
+  },
+  "remoteCache": {
+    "enabled": true
+  }
+}

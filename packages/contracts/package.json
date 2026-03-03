@@ -1,0 +1,32 @@
+{
+  "name": "@agentlink/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AgentLink smart contracts",
+  "license": "MIT",
+  "author": "AgentLink Team",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentlink/agentlink-mvp.git",
+    "directory": "packages/contracts"
+  },
+  "scripts": {
+    "build": "forge build",
+    "dev": "anvil",
+    "lint": "solhint 'src/**/*.sol'",
+    "lint:fix": "solhint 'src/**/*.sol' --fix",
+    "format": "forge fmt",
+    "format:check": "forge fmt --check",
+    "test": "forge test",
+    "test:unit": "forge test",
+    "coverage": "forge coverage",
+    "clean": "rm -rf out cache broadcast artifacts .turbo",
+    "deploy:local": "../../scripts/deploy-contracts.sh local",
+    "deploy:testnet": "../../scripts/deploy-contracts.sh base-sepolia --verify",
+    "deploy:mainnet": "../../scripts/deploy-contracts.sh base-mainnet --verify",
+    "verify": "forge verify-contract"
+  },
+  "devDependencies": {
+    "solhint": "^4.5.2"
+  }
+}

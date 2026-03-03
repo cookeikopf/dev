@@ -1,0 +1,9 @@
+Competitor,Category,Fee_Structure,Agent_Focused,Open_Source,Differentiation,Weakness
+EscrowLayer,Escrow,0.5% per tx,No,No,Simple escrow-only,Single feature
+Braintrust,Freelance,0% freelancer / 10% client,No,Partial,"DAO governance, token",Token volatility
+LlamaPay,Streaming,0% stablecoin / 0.5% swap,No,Yes,Gas efficient streaming,Niche use case
+Superfluid,Streaming,Protocol-level,No,Partial,Super tokens,Complexity
+Nevermined,Agent Payments,Custom/Usage-based,Yes,SDK only,"A2A protocol, metering",Early stage
+OpenZeppelin Defender,Infrastructure,$0-500/mo,No,Partial,Security monitoring,Shutting down
+Coinbase Commerce,Payment Gateway,1% flat,No,No,Brand trust,Limited crypto
+Stripe (Crypto),Payment Gateway,1.5%,No,No,Existing integration,High fees

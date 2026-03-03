@@ -1,0 +1,49 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+
+# Shared dependencies across all packages
+catalog:
+  # Core
+  typescript: ^5.4.3
+  
+  # Ethereum
+  viem: ^2.8.0
+  wagmi: ^2.5.0
+  abitype: ^1.0.0
+  
+  # React
+  react: ^18.2.0
+  react-dom: ^18.2.0
+  
+  # Testing
+  vitest: ^1.4.0
+  @testing-library/react: ^14.2.2
+  
+  # Build
+  tsup: ^8.0.2
+  tsx: ^4.7.1
+
+# Only built dependencies (speeds up install)
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - 'bigint-buffer'
+  - 'bufferutil'
+  - 'esbuild'
+  - 'keccak'
+  - 'secp256k1'
+  - 'sharp'
+  - 'utf-8-validate'
+
+# Hoist settings
+hoistPattern:
+  - '*eslint*'
+  - '*prettier*'
+  - '@types/*'
+  - 'typescript'
+
+# Link settings
+linkWorkspacePackages: true
+
+# Prefer workspace packages
+preferWorkspacePackages: true

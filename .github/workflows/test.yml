@@ -1,38 +1,244 @@
-name: CI
-
-permissions: {}
+name: Test Suite
 
 on:
   push:
+    branches: [main, develop]
   pull_request:
-  workflow_dispatch:
-
-env:
-  FOUNDRY_PROFILE: ci
+    branches: [main, develop]
 
 jobs:
-  check:
-    name: Foundry project
+  # ============================================================================
+  # Lint and Type Check
+  # ============================================================================
+  lint:
+    name: Lint & Type Check
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          persist-credentials: false
-          submodules: recursive
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm typecheck
+
+  # ============================================================================
+  # Unit Tests
+  # ============================================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [agentlink-core, a2a-protocol, agentlink-cli]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run unit tests
+        run: pnpm --filter @agentlink/${{ matrix.package }} test
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./${{ matrix.package }}/coverage/lcov.info
+          flags: ${{ matrix.package }}
+          name: ${{ matrix.package }}-coverage
+
+  # ============================================================================
+  # Contract Tests
+  # ============================================================================
+  contract-tests:
+    name: Contract Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run Forge build
+        working-directory: ./agentlink-contracts
+        run: forge build
+
+      - name: Run Forge tests
+        working-directory: ./agentlink-contracts
+        run: forge test -vvv --fuzz-runs 1000
+
+      - name: Run invariant tests
+        working-directory: ./agentlink-contracts
+        run: forge test --match-contract Invariant -vvv
+
+      - name: Generate gas report
+        working-directory: ./agentlink-contracts
+        run: forge test --gas-report > gas-report.txt
+
+      - name: Upload gas report
+        uses: actions/upload-artifact@v3
+        with:
+          name: gas-report
+          path: ./agentlink-contracts/gas-report.txt
+
+  # ============================================================================
+  # Integration Tests
+  # ============================================================================
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      anvil:
+        image: ghcr.io/foundry-rs/foundry:latest
+        ports:
+          - 8545:8545
+        options: --entrypoint anvil
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Show Forge version
-        run: forge --version
+      - name: Install dependencies
+        run: pnpm install
 
-      - name: Run Forge fmt
-        run: forge fmt --check
+      - name: Deploy contracts to Anvil
+        working-directory: ./agentlink-contracts
+        run: |
+          anvil --fork-url ${{ secrets.BASE_SEPOLIA_RPC }} &
+          sleep 5
+          forge script script/DeployAgentIdentity.s.sol --rpc-url http://localhost:8545 --broadcast
+          forge script script/DeployPaymentRouter.s.sol --rpc-url http://localhost:8545 --broadcast
 
-      - name: Run Forge build
-        run: forge build --sizes
+      - name: Run integration tests
+        run: pnpm test:integration
+        env:
+          ANVIL_RPC_URL: http://localhost:8545
 
-      - name: Run Forge tests
-        run: forge test -vvv
+  # ============================================================================
+  # E2E Tests
+  # ============================================================================
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+
+  # ============================================================================
+  # Coverage Summary
+  # ============================================================================
+  coverage:
+    name: Coverage Summary
+    needs: [unit-tests, contract-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run all tests with coverage
+        run: pnpm test:coverage
+
+      - name: Upload combined coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: >
+            ./agentlink-core/coverage/lcov.info,
+            ./a2a-protocol/coverage/lcov.info,
+            ./agentlink-cli/coverage/lcov.info
+          flags: combined
+          name: combined-coverage
+
+      - name: Check coverage thresholds
+        run: |
+          echo "Checking coverage thresholds..."
+          # Coverage thresholds are enforced by vitest config
+          pnpm --filter @agentlink/core test:coverage

@@ -1,0 +1,4 @@
+Tier,Monthly_Cost,Transaction_Fee,Monthly_Volume_Limit,API_Calls_Per_Day,Support_Level,Key_Features,Target_User
+Free,$0,0.75%,"$10,000","1,000",Community,"Basic escrow, 1 agent, Standard settlement",Individual developers
+Pro,$49,0.35%,"$100,000","50,000",Email + Chat,"Priority settlement, Multi-agent, Analytics",Growing teams/DAOs
+Enterprise,$500+,0.15-0.25%,Unlimited,Unlimited,Dedicated,"Custom contracts, SLA, White-label",Protocols/Institutions

@@ -1,0 +1,17 @@
+Category,KPI_Name,Definition,Target_Month_3,Target_Month_6,Target_Month_12,Measurement_Frequency
+Growth,Monthly Active Agents,Unique agents with >=1 transaction,15,50,150,Monthly
+Growth,Monthly Transaction Volume,Total USD processed monthly,"$50,000","$250,000","$1,000,000",Monthly
+Growth,User Growth Rate,MoM % growth in registered users,20%,25%,20%,Monthly
+Growth,Agent Activation Rate,% registered with >=1 transaction,60%,70%,75%,Monthly
+Revenue,Monthly Recurring Revenue,Predictable subscription revenue,$500,"$2,000","$8,000",Monthly
+Revenue,Average Revenue Per User,Total revenue / total users,$50,$75,$100,Monthly
+Revenue,Transaction Fee Revenue,Revenue from fees only,$300,"$1,500","$5,000",Monthly
+Revenue,Take Rate,Total revenue / transaction volume,0.60%,0.55%,0.50%,Monthly
+Engagement,Transactions Per Agent,Average monthly transactions per agent,3,5,8,Monthly
+Engagement,Average Transaction Size,Median transaction value in USD,$400,$500,$600,Monthly
+Engagement,Retention Rate,% active this month who were active last month,70%,75%,80%,Monthly
+Engagement,Time to First Transaction,Days from registration to first tx,7,5,3,Monthly
+Operational,Settlement Time,Time from completion to fund release (hours),<24,<12,<6,Monthly
+Operational,Dispute Rate,% of transactions with disputes filed,<5%,<3%,<2%,Monthly
+Operational,Contract Success Rate,% of escrows completed without issues,>90%,>93%,>95%,Monthly
+Operational,Support Response Time,Median time to first response (hours),<4,<2,<1,Monthly
