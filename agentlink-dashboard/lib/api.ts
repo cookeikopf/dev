@@ -224,13 +224,13 @@ class ApiClient {
       return this.filterTransactions(endpoint)
     }
     if (endpoint.includes('/stats')) {
-      return this.getDashboardStats()
+      return this._generateDashboardStats()
     }
     if (endpoint.includes('/revenue')) {
-      return this.getRevenueData()
+      return this._generateRevenueData()
     }
     if (endpoint.includes('/activity')) {
-      return this.getActivityFeed()
+      return this._generateActivityFeed()
     }
     if (endpoint === '/agents') {
       return {
@@ -367,7 +367,7 @@ class ApiClient {
     }
   }
 
-  private getDashboardStats(): DashboardStats {
+  private _generateDashboardStats(): DashboardStats {
     const activeAgents = mockAgents.filter(a => a.status === 'active').length
     const totalVolume = mockTransactions
       .filter(t => t.status === 'completed')
@@ -385,7 +385,7 @@ class ApiClient {
     }
   }
 
-  private getRevenueData(): RevenueData[] {
+  private _generateRevenueData(): RevenueData[] {
     const data: RevenueData[] = []
     const today = new Date()
     
@@ -409,7 +409,7 @@ class ApiClient {
     return data
   }
 
-  private getActivityFeed(): ActivityItem[] {
+  private _generateActivityFeed(): ActivityItem[] {
     return [
       {
         id: 'act_1',
@@ -460,7 +460,7 @@ class ApiClient {
   }
 
   // Public API methods
-  async getAgents(filter?: AgentFilter): Promise<PaginatedResponse<Agent>> {
+  async getAgents(filter?: AgentFilter & { page?: number; limit?: number }): Promise<PaginatedResponse<Agent>> {
     const params = new URLSearchParams()
     if (filter?.search) params.set('search', filter.search)
     if (filter?.status && filter.status !== 'all') params.set('status', filter.status)

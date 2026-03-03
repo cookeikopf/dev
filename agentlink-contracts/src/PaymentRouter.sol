@@ -3,7 +3,6 @@ pragma solidity 0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
@@ -14,7 +13,7 @@ import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
  * @dev Routes payments from payer to receiver with treasury fee deduction
  * @custom:security-contact security@agentlink.io
  */
-contract PaymentRouter is Ownable2Step, ReentrancyGuard, Pausable {
+contract PaymentRouter is Ownable, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
 
     /*//////////////////////////////////////////////////////////////
