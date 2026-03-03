@@ -51,7 +51,7 @@ contract DeployV3StandardWithMocks is Script {
         proposers[0] = admin;
         address[] memory executors = new address[](1);
         executors[0] = admin;
-        
+
         TimelockController timelock = new TimelockController(2 days, proposers, executors, admin);
         console2.log("6. TimelockController:", address(timelock));
 
@@ -69,10 +69,10 @@ contract DeployV3StandardWithMocks is Script {
 
         // 7. Configure permissions (skip ETH staking - can be done later)
         reputation.authorizeContract(address(clawCredit));
-        
+
         // Grant reporter role to deployer for testing
         aiOracle.grantRole(aiOracle.REPORTER_ROLE(), deployer);
-        
+
         // Stake small amount of ETH for reporter (0.01 ETH is enough for testnet)
         aiOracle.stakeReporter{value: 0.01 ether}();
 

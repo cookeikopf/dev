@@ -58,7 +58,8 @@ contract ClawCreditAgentStandardV3Test is Test {
     function test_EscrowLiabilityBlocksOverWithdrawUntilReleased() public {
         // Create task with escrow
         vm.prank(agent);
-        uint256 taskId = pool.createTaskReceivable(100e6, uint40(block.timestamp + 20 days), keccak256("esc-liab"), true);
+        uint256 taskId =
+            pool.createTaskReceivable(100e6, uint40(block.timestamp + 20 days), keccak256("esc-liab"), true);
 
         // Verify escrow liability is tracked
         assertEq(pool.totalTaskEscrowLiability(), 100e6, "Escrow liability should be 100 USDC");
@@ -75,7 +76,7 @@ contract ClawCreditAgentStandardV3Test is Test {
 
         // Verify escrow liability is cleared
         assertEq(pool.totalTaskEscrowLiability(), 0, "Escrow liability should be 0 after release");
-        
+
         // Now withdrawal should work
         vm.prank(lender);
         pool.withdrawTranche(senior, 200_000e6);
@@ -145,7 +146,7 @@ contract ClawCreditAgentStandardV3Test is Test {
 
     function test_EmergencyRecoverCannotDrainUSDC() public {
         uint256 initialPoolBalance = usdc.balanceOf(address(pool));
-        
+
         vm.expectRevert();
         pool.emergencyRecoverToken(address(usdc), address(this), initialPoolBalance);
     }

@@ -509,13 +509,13 @@ contract ClawCreditUltimateV3 is AccessControl, Pausable, ReentrancyGuard {
         usdc.safeTransferFrom(msg.sender, address(this), debt);
 
         _processRepayment(loan.borrower, debt);
-        
+
         // Close loan if fully repaid
         loan.principalOutstanding = 0;
         loan.interestOutstanding = 0;
         loan.active = false;
         totalOutstandingPrincipal -= loan.principal;
-        
+
         // Return collateral to agent
         if (loan.collateral > 0) {
             agents[loan.borrower].stakedCollateral -= loan.collateral;

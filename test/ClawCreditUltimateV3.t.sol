@@ -146,7 +146,7 @@ contract ClawCreditUltimateV3Test is Test {
         uint256 receivableId = pool.escrowTaskPayment(agent, taskValue, block.timestamp + 30 days, keccak256("task1"));
 
         // Agent should have 80% credit ($80) - taskBackedCredit is index 2 (9 total fields)
-        (,,uint256 taskCredit,,,,,,) = pool.agents(agent);
+        (,, uint256 taskCredit,,,,,,) = pool.agents(agent);
         assertEq(taskCredit, 80e6);
     }
 
@@ -158,18 +158,21 @@ contract ClawCreditUltimateV3Test is Test {
 
         // Submit votes
         vm.prank(admin);
-        aiOracle.reportMetrics(agent, AIPerformanceOracle.AgentMetrics({
-            taskSuccessRate: 8000,
-            avgTaskValue: 100e6,
-            consistencyScore: 7500,
-            uptime: 9000,
-            responseTime: 120,
-            uniqueClients: 5,
-            totalTasks: 100,
-            totalValue: 10_000e6,
-            lastUpdate: block.timestamp,
-            exists: true
-        }));
+        aiOracle.reportMetrics(
+            agent,
+            AIPerformanceOracle.AgentMetrics({
+                taskSuccessRate: 8000,
+                avgTaskValue: 100e6,
+                consistencyScore: 7500,
+                uptime: 9000,
+                responseTime: 120,
+                uniqueClients: 5,
+                totalTasks: 100,
+                totalValue: 10_000e6,
+                lastUpdate: block.timestamp,
+                exists: true
+            })
+        );
 
         // With only 1 reporter, consensus is not reached (needs 3)
         // Score should be 0 until consensus is reached

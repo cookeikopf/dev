@@ -355,7 +355,7 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
         assetsOut = (sharesBurned * t.assets) / t.shares;
         yieldOut = (sharesBurned * t.pendingYield) / t.shares;
         uint256 out = assetsOut + yieldOut;
-        
+
         // Check liquidity BEFORE reducing tranche assets (to properly account for escrow liability)
         _checkLiquidBalance(out);
 
@@ -1555,7 +1555,7 @@ contract ClawCreditAgentStandardV3 is AccessControl, Pausable, ReentrancyGuard, 
         uint256 liabilities = protocolFees + insurancePool + reinsurancePool + reservedIntentCredit
             + totalSponsorCollateral + trancheLiabilities + totalTaskEscrowLiability;
         uint256 available = bal > liabilities ? bal - liabilities : 0;
-        
+
         // FIXED: Check if requested amount is covered by available liquidity
         // instead of blocking all withdrawals when escrow exists
         if (amountOut > available) {
